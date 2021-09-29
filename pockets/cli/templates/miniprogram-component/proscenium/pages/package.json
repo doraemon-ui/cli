@@ -1,0 +1,17 @@
+{
+  "name": "template.miniprogram-demo-component",
+  "private": true,
+  "version": "0.0.1",
+  "description": "miniprogram component demo for doraemon-ui",
+  "author": "skyvow <724355924@qq.com>",
+  "homepage": "",
+  "license": "MIT",
+  "main": "app.js",
+  "keywords": [
+    "doraemon-ui"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {}
+}

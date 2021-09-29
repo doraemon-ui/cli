@@ -1,0 +1,52 @@
+{
+  "name": "@doraemon-ui/cli",
+  "private": false,
+  "version": "0.0.2-alpha.28",
+  "description": "Command line interface for rapid doraemon-ui development",
+  "bin": {
+    "dora": "./lib/bin/cli.js"
+  },
+  "author": "skyvow <724355924@qq.com>",
+  "homepage": "",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "types": "types/index.d.ts",
+  "keywords": [
+    "doraemon-ui",
+    "miniprogram",
+    "cli"
+  ],
+  "scripts": {
+    "dev": "npm run clean && npm run build:dev",
+    "build": "npm run clean && npm run build:lib",
+    "build:dev": "cross-env tsc -p ./tsconfig.lib.json --watch --incremental",
+    "build:lib": "cross-env tsc -p ./tsconfig.lib.json --declaration --declarationDir types",
+    "clean": "cross-env rimraf lib/* types/*",
+    "preversion": "npm run build"
+  },
+  "dependencies": {
+    "@doraemon-ui/miniprogram.tools": "^0.0.2-alpha.16",
+    "axios": "^0.21.1",
+    "chalk": "^4.1.1",
+    "command-exists": "^1.2.9",
+    "commander": "^8.1.0",
+    "cross-env": "^7.0.3",
+    "find-parent-dir": "^0.3.1",
+    "git-user-name": "^2.0.0",
+    "inquirer": "^8.1.2",
+    "lodash.defaultsdeep": "^4.6.1",
+    "ncp": "^2.0.0",
+    "rimraf": "^3.0.2",
+    "string.prototype.padend": "^3.1.2",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/command-exists": "^1.2.0",
+    "@types/find-parent-dir": "^0.3.0",
+    "@types/inquirer": "^7.3.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

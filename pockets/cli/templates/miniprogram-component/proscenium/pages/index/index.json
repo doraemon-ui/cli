@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "Demo",
+  "usingComponents": {
+    "dora-demo-component": "template.miniprogram-demo-component/index"
+  }
+}

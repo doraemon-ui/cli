@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "target": "esnext",
+    "module": "commonjs",
+    "allowJs": false,
+    "outDir": "./lib",
+    "strict": false,
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "newLine": "lf",
+    "lib": [
+      "es2015"
+    ],
+    "skipLibCheck": true
+  },
+  "compileOnSave": false,
+  "exclude": ["node_modules/*", "miniprogram_dist/*", "templates/**"]
+}
