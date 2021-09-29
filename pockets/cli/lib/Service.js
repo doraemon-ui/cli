@@ -133,7 +133,7 @@ class Service {
         this.mode = mode;
         // load user config
         const userOptions = this.loadUserOptions();
-        this.projectOptions = lodash_defaultsdeep_1.default(userOptions, options_1.defaults());
+        this.projectOptions = (0, lodash_defaultsdeep_1.default)(userOptions, (0, options_1.defaults)());
         this.plugins.forEach(({ id, apply }) => {
             apply.default(new PluginAPI_1.PluginAPI(id, this), this.projectOptions);
         });
@@ -153,7 +153,7 @@ class Service {
         args._ = args._ || [];
         let command = this.commands[name];
         if (!command && name) {
-            error_1.error(`command "${name}" does not exist.`);
+            (0, error_1.error)(`command "${name}" does not exist.`);
             process.exit(1);
         }
         if (args.version || args.V) {
@@ -167,7 +167,7 @@ class Service {
             args._.shift();
             rawArgv.shift();
         }
-        await version_1.checkVersion();
+        await (0, version_1.checkVersion)();
         const { fn } = command;
         return fn(args, rawArgv);
     }
@@ -226,12 +226,12 @@ class Service {
                     fileConfig = fileConfig();
                 }
                 if (!fileConfig || typeof fileConfig !== 'object') {
-                    error_1.error('Error loading dora.config.js: should export an object or a function that returns object.');
+                    (0, error_1.error)('Error loading dora.config.js: should export an object or a function that returns object.');
                     fileConfig = null;
                 }
             }
             catch (e) {
-                error_1.error('Error loading dora.config.js:');
+                (0, error_1.error)('Error loading dora.config.js:');
                 throw e;
             }
         }

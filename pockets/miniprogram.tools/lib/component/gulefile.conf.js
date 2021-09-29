@@ -80,21 +80,21 @@ const scripts = (paths) => () => (gulp_1.default
     .src(paths.entry)
     .pipe(tsProject())
     .js
-    .pipe(gulp_banner_1.default(util_1.default.banner()))
+    .pipe((0, gulp_banner_1.default)(util_1.default.banner()))
     .pipe(gulp_1.default.dest(paths.outputDir)));
 const styles = (paths) => () => (gulp_1.default
     .src(paths.entry)
     // .pipe(sourcemaps.init())
-    .pipe(gulp_less_1.default({
+    .pipe((0, gulp_less_1.default)({
     javascriptEnabled: true,
 }))
-    .pipe(gulp_postcss_1.default([autoprefixer_1.default()]))
-    .pipe(gulp_px2rpx_1.default(paths.pxTransform))
-    .pipe(gulp_convertCSSVar_1.default({ bodyNode: 'page' }))
-    .pipe(gulp_clean_css_1.default({ format: 'beautify' }))
-    .pipe(gulp_injectCSS_1.default())
+    .pipe((0, gulp_postcss_1.default)([(0, autoprefixer_1.default)()]))
+    .pipe((0, gulp_px2rpx_1.default)(paths.pxTransform))
+    .pipe((0, gulp_convertCSSVar_1.default)({ bodyNode: 'page' }))
+    .pipe((0, gulp_clean_css_1.default)({ format: 'beautify' }))
+    .pipe((0, gulp_injectCSS_1.default)())
     // .pipe(sourcemaps.write())
-    .pipe(gulp_rename_1.default({ extname: '.wxss' }))
+    .pipe((0, gulp_rename_1.default)({ extname: '.wxss' }))
     .pipe(gulp_1.default.dest(paths.outputDir)));
 const watch = () => {
     gulp_1.default.watch(config.copyPlugin.entry, copy({ entry: config.copyPlugin.entry, outputDir: config.outputDir }));
@@ -119,15 +119,15 @@ function logEvents(gulpInst, onListening) {
     });
     gulpInst.on('stop', async function (evt) {
         onListening && await onListening('stop');
-        const time = pretty_hrtime_1.default(evt.duration);
+        const time = (0, pretty_hrtime_1.default)(evt.duration);
         /* istanbul ignore next */
         const level = evt.branch ? 'debug' : 'info';
         console[level]('Finished', '\'' + ansi_1.default.cyan(evt.name) + '\'', 'after', ansi_1.default.magenta(time));
     });
     gulpInst.on('error', async function (evt) {
         onListening && await onListening('error');
-        const msg = format_error_1.default(evt);
-        const time = pretty_hrtime_1.default(evt.duration);
+        const msg = (0, format_error_1.default)(evt);
+        const time = (0, pretty_hrtime_1.default)(evt.duration);
         const level = evt.branch ? 'debug' : 'error';
         console[level]('\'' + ansi_1.default.cyan(evt.name) + '\'', ansi_1.default.red('errored after'), ansi_1.default.magenta(time));
         // If we haven't logged this before, log it and add to list
@@ -151,14 +151,14 @@ function gulp4Build(opts = {}) {
         const runMethod = opts.series ? 'series' : 'parallel';
         gulp_1.default[runMethod](toRun)(function (err) {
             if (err) {
-                exit_1.default(1);
+                (0, exit_1.default)(1);
             }
             console.info(ansi_1.default.green(opts.onCloseMsg || 'Build complete'));
         });
     }
     catch (err) {
         console.error(ansi_1.default.red(err.message));
-        exit_1.default(1);
+        (0, exit_1.default)(1);
     }
 }
 exports.gulp4Build = gulp4Build;

@@ -20,11 +20,11 @@ function help(api, options) {
         console.log('\n  Usage: dora <command> [options]\n' +
             '\n  Commands:\n');
         const commands = api.service.commands;
-        const padLength = getPadLength_1.getPadLength(commands);
+        const padLength = (0, getPadLength_1.getPadLength)(commands);
         for (const name in commands) {
             if (name !== 'help') {
                 const opts = commands[name].opts || {};
-                console.log(`    ${chalk_1.default.blue(string_prototype_padend_1.default(name, padLength))}${opts.description || ''}`);
+                console.log(`    ${chalk_1.default.blue((0, string_prototype_padend_1.default)(name, padLength))}${opts.description || ''}`);
             }
         }
         console.log(`\n  run ${chalk_1.default.green('dora help [command]')} for usage of a specific command.\n`);
@@ -40,9 +40,9 @@ function help(api, options) {
             }
             if (opts.options) {
                 console.log('\n  Options:\n');
-                const padLength = getPadLength_1.getPadLength(opts.options);
+                const padLength = (0, getPadLength_1.getPadLength)(opts.options);
                 for (const name in opts.options) {
-                    console.log(`    ${chalk_1.default.blue(string_prototype_padend_1.default(name, padLength))}${opts.options[name]}`);
+                    console.log(`    ${chalk_1.default.blue((0, string_prototype_padend_1.default)(name, padLength))}${opts.options[name]}`);
                 }
             }
             if (opts.details) {

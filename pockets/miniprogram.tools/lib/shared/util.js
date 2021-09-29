@@ -33,8 +33,8 @@ const banner = () => {
     return `${`
 /**
  * ${packageJSON.name}.
- * © 2021 - ${moment_1.default().year()} Doraemon UI.
- * Built on ${moment_1.default().format('YYYY-MM-DD, HH:mm:ss')}.
+ * © 2021 - ${(0, moment_1.default)().year()} Doraemon UI.
+ * Built on ${(0, moment_1.default)().format('YYYY-MM-DD, HH:mm:ss')}.
  * With @doraemon-ui/miniprogram.tools v${toolsVersion}.
  */
 `.trim()}\n`;

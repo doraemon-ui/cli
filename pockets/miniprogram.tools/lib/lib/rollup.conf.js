@@ -67,19 +67,19 @@ function rollupConfig(opts = {}) {
         { src: 'src/**/*.wxml', dest: 'miniprogram_dist' },
     ];
     const commonPlugins = [
-        rollup_plugin_copy_1.default({
+        (0, rollup_plugin_copy_1.default)({
             targets: Array.isArray(options.copy) ?
                 options.copy : options.copy === false ?
                 [] : copyFile,
         }),
-        plugin_node_resolve_1.nodeResolve({
+        (0, plugin_node_resolve_1.nodeResolve)({
             mainFields: ['module', 'main', 'jsnext:main', 'browser'],
             extensions,
         }),
-        plugin_commonjs_1.default({
+        (0, plugin_commonjs_1.default)({
             include: /node_modules/,
         }),
-        plugin_typescript_1.default({
+        (0, plugin_typescript_1.default)({
             tslib: require('tslib'),
             typescript: require('typescript'),
             tsconfig,
@@ -90,7 +90,7 @@ function rollupConfig(opts = {}) {
             sourceMap: false,
             external: externals,
             plugins: commonPlugins.concat([
-                plugin_replace_1.default({
+                (0, plugin_replace_1.default)({
                     preventAssignment: true,
                     values: Object.assign({
                         'process.env.NODE_ENV': 'process.env.NODE_ENV',

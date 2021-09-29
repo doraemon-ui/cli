@@ -58,7 +58,7 @@ exports.installPackage = installPackage;
  * 安装 package.json 中的依赖
  */
 async function installPackageDependencies(scope) {
-    await lerna_1.runLernaCommand([
+    await (0, lerna_1.runLernaCommand)([
         'bootstrap',
         `--scope=${scope}`,
     ], `正在安装 ${scope} 的依赖`, '安装完成惹');
@@ -72,7 +72,7 @@ async function addPackage(packageName, dev, scope) {
     if (!packageName) {
         return;
     }
-    await lerna_1.runLernaCommand([
+    await (0, lerna_1.runLernaCommand)([
         'add',
         packageName,
         `--scope=${scope}`,

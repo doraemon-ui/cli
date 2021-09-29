@@ -9,9 +9,9 @@ const __1 = require("..");
 const error_1 = require("../utils/error");
 const service = new __1.Service(process.env.DORA_CLI_CONTEXT || process.cwd());
 const rawArgv = process.argv.slice(2);
-const args = minimist_1.default(rawArgv);
+const args = (0, minimist_1.default)(rawArgv);
 const command = args._[0];
 service.run(command, args, rawArgv).catch(err => {
-    error_1.error(err);
+    (0, error_1.error)(err);
     process.exit(1);
 });

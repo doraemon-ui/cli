@@ -59,7 +59,7 @@ function renderFile(content, packageName = '', componentNameShort = '') {
         .replace(/demo-lib/g, componentNameShort);
 }
 function rewritePackageJSON(componentPath, getData) {
-    return rewrite_1.rewrite({
+    return (0, rewrite_1.rewrite)({
         filePath: componentPath,
         fileName: 'package.json',
         transformData(data) {
@@ -68,7 +68,7 @@ function rewritePackageJSON(componentPath, getData) {
     });
 }
 function rewriteTypeDeclare(componentPath, packageName) {
-    return rewrite_1.rewrite({
+    return (0, rewrite_1.rewrite)({
         filePath: componentPath,
         fileName: 'index.d.ts',
         transformData(data) {
@@ -77,7 +77,7 @@ function rewriteTypeDeclare(componentPath, packageName) {
     });
 }
 function rewriteReadme(componentPath, packageName) {
-    return rewrite_1.rewrite({
+    return (0, rewrite_1.rewrite)({
         filePath: componentPath,
         fileName: 'README.md',
         transformData(data) {
@@ -91,7 +91,7 @@ async function rewriteDemo(rootName, author, packageJSON, cwd) {
     const packageVer = packageJSON.version;
     const componentName = packageName.split('/')[packageName.split('/').length - 1];
     const componentNameShort = componentName.split('.')[componentName.split('.').length - 1];
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: distDir,
         fileName: 'project.config.json',
         transformData(data) {
@@ -110,7 +110,7 @@ async function rewriteDemo(rootName, author, packageJSON, cwd) {
             [packageName]: `^${packageVer}`,
         },
     }));
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'pages/index'),
         fileName: 'index.json',
         transformData(data) {
@@ -122,7 +122,7 @@ async function rewriteDemo(rootName, author, packageJSON, cwd) {
             }));
         },
     });
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'pages/index'),
         fileName: 'index.wxml',
         transformData(data) {
@@ -145,7 +145,7 @@ async function create(cwd, name, componentType, npmScope) {
     if (!name) {
         return Promise.reject('缺少 name 参数');
     }
-    const type = componentType || await prompt_1.getComponentType();
+    const type = componentType || await (0, prompt_1.getComponentType)();
     switch (type) {
         case prompt_1.ComponentType.MiniprogramLib:
             createLib(cwd, name, type, npmScope);
@@ -172,11 +172,11 @@ async function createComponent(cwd, name, type, npmScope) {
     if (!name) {
         return Promise.reject('缺少 name 参数');
     }
-    const scope = npmScope || await prompt_1.getNpmScope();
-    const author = git_user_name_1.default();
+    const scope = npmScope || await (0, prompt_1.getNpmScope)();
+    const author = (0, git_user_name_1.default)();
     const template = path.join(config_1.templatesDir, type);
     const distDir = path.join(cwd, name);
-    await copy_1.copyFolder(template, distDir);
+    await (0, copy_1.copyFolder)(template, distDir);
     const packageName = `${scope}/${name}`;
     const componentNameShort = name.split('.')[name.split('.').length - 1];
     const packageJSON = await rewritePackageJSON(distDir, (packageJSON) => ({
@@ -188,28 +188,28 @@ async function createComponent(cwd, name, type, npmScope) {
     }));
     await rewriteTypeDeclare(distDir, packageName);
     await rewriteReadme(distDir, packageName);
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'src'),
         fileName: 'index.ts',
         transformData(data) {
             return renderFile(data, packageName, componentNameShort);
         },
     });
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, '__tests__'),
         fileName: 'index.spec.ts',
         transformData(data) {
             return renderFile(data, packageName, componentNameShort);
         },
     });
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'assets'),
         fileName: 'variables.less',
         transformData(data) {
             return renderFile(data, packageName, componentNameShort);
         },
     });
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'assets'),
         fileName: 'index.less',
         transformData(data) {
@@ -217,7 +217,7 @@ async function createComponent(cwd, name, type, npmScope) {
         },
     });
     await rewriteDemo(name, author, JSON.parse(packageJSON), cwd);
-    await install_1.installPackage(distDir, '');
+    await (0, install_1.installPackage)(distDir, '');
 }
 /**
  * 创建小程序组件片段
@@ -233,14 +233,14 @@ async function createComponentSnippet(cwd, name, type) {
     }
     const template = path.join(config_1.templatesDir, type);
     const distDir = path.join(cwd);
-    await copy_1.copyFolder(template, distDir, {
+    await (0, copy_1.copyFolder)(template, distDir, {
         rename(target) {
             const reg = /index(.\w+)$/;
             const match = target.match(reg);
             return match ? target.replace(reg, `${name}${match[1]}`) : target;
         },
     });
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: distDir,
         fileName: `${name}.ts`,
         transformData(data) {
@@ -262,11 +262,11 @@ async function createLib(cwd, name, type, npmScope) {
     if (!name) {
         return Promise.reject('缺少 name 参数');
     }
-    const scope = npmScope || await prompt_1.getNpmScope();
-    const author = git_user_name_1.default();
+    const scope = npmScope || await (0, prompt_1.getNpmScope)();
+    const author = (0, git_user_name_1.default)();
     const template = path.join(config_1.templatesDir, type);
     const distDir = path.join(cwd, name);
-    await copy_1.copyFolder(template, distDir);
+    await (0, copy_1.copyFolder)(template, distDir);
     const packageName = `${scope}/${name}`;
     const componentNameShort = name.split('.')[name.split('.').length - 1];
     await rewritePackageJSON(distDir, (packageJSON) => ({
@@ -278,19 +278,19 @@ async function createLib(cwd, name, type, npmScope) {
     }));
     await rewriteTypeDeclare(distDir, packageName);
     await rewriteReadme(distDir, packageName);
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'src'),
         fileName: 'index.ts',
         transformData(data) {
             return renderFile(data, packageName, componentNameShort);
         },
     });
-    await rewrite_1.rewrite({
+    await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, '__tests__'),
         fileName: 'index.spec.ts',
         transformData(data) {
             return renderFile(data, packageName, componentNameShort);
         },
     });
-    await install_1.installPackage(distDir, '');
+    await (0, install_1.installPackage)(distDir, '');
 }

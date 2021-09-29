@@ -7,7 +7,7 @@ exports.copyFolder = void 0;
 const ncp_1 = __importDefault(require("ncp"));
 function copyFolder(from, to, options = {}) {
     return new Promise((resolve, reject) => {
-        ncp_1.default(from, to, options, function (err) {
+        (0, ncp_1.default)(from, to, options, function (err) {
             if (err) {
                 reject(err);
             }

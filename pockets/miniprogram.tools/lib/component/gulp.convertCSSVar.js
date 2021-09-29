@@ -143,7 +143,7 @@ function gulpProfixer(opts) {
             }
         });
         let css = css_tree_1.default.generate(ast);
-        let bu = Buffer.from(cssbeautify_1.default(css, {
+        let bu = Buffer.from((0, cssbeautify_1.default)(css, {
             indent: '  ',
             openbrace: 'end-of-line',
             autosemicolon: true,

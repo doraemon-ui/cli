@@ -44,7 +44,7 @@ function runLernaCommand(args = [], onStartMsg = '', onCloseMsg = '') {
     console.log(chalk_1.default.gray('Running '), chalk_1.default.inverse(`${command} ${args.join(' ')}`));
     console.log(chalk_1.default.green(onStartMsg));
     return new Promise((resolve, reject) => {
-        spawn_1.spawn({
+        (0, spawn_1.spawn)({
             useStdIn: true,
             command,
             args,
