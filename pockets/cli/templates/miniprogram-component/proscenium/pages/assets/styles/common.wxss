@@ -2,13 +2,23 @@ page {
   width: 100%;
   height: 100%;
   position: relative;
-  color: rgba(0, 0, 0, .85);
-  background-color: #f8f8f8;
+  /* color: rgba(0, 0, 0, .85);
+  color: rgba(var(--dora-text-color-rgb), .85);
+  background-color: #fff;
+  background-color: var(--dora-background-color); */
   font-size: 16px;
-  font-family: PingFang SC, Helvetica Neue, Hiragino Sans GB, Helvetica, Microsoft YaHei, Arial;
+  font-family: -apple-system-font, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-family: var(--dora-font-family);
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+}
+
+.page {
+  color: rgba(0, 0, 0, .85);
+  color: rgba(var(--dora-text-color-rgb), .85);
+  background-color: #fff;
+  background-color: var(--dora-background-color);
 }
 
 .page__hd {
@@ -19,7 +29,7 @@ page {
   padding-bottom: 40px;
 }
 
-.page__bd_spacing {
+.page__bd--spacing {
   padding-left: 15px;
   padding-right: 15px;
 }
@@ -38,11 +48,12 @@ page {
 .page__desc {
   margin-top: 5px;
   color: rgba(0, 0, 0, .45);
+  color: rgba(var(--dora-text-color-rgb), .45);
   text-align: left;
   font-size: 14px;
 }
 
-.placeholder {
+.page__placeholder {
   background-color: #ebebef;
   color: #bbb;
   text-align: center;
@@ -52,10 +63,11 @@ page {
   box-sizing: border-box;
 }
 
-.sub-title {
+.page__sub-title {
   padding: 30rpx 30rpx 18rpx;
   font-size: 28rpx;
   color: rgba(0, 0, 0, .65);
+  color: rgba(var(--dora-text-color-rgb), .65);
   width: 100%;
   box-sizing: border-box;
 }
