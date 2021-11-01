@@ -3,6 +3,7 @@ import padEnd from 'string.prototype.padend'
 import { getPadLength } from '../utils/getPadLength'
 import { PluginAPI } from '../PluginAPI'
 import { Options } from '../options'
+import { ServiceCommand } from '../Service'
 
 export default function help (api: PluginAPI, options: Options) {
   api.registerCommand('help', args => {
@@ -36,7 +37,7 @@ export default function help (api: PluginAPI, options: Options) {
     } for usage of a specific command.\n`)
   }
 
-  function logHelpForCommand (name, command) {
+  function logHelpForCommand (name: string, command: ServiceCommand) {
     if (!command) {
       console.log(chalk.red(`\n  command "${name}" does not exist.`))
     } else {

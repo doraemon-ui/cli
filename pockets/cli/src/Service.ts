@@ -6,6 +6,7 @@ import { error } from './utils/error'
 import { version } from './version'
 import { defaults, Options } from './options'
 import defaultsDeep from 'lodash.defaultsdeep'
+import minimist from 'minimist'
 
 /**
  * Dora CLI
@@ -25,10 +26,10 @@ export class Service {
   /**
    * CLI 命令集合
    *
-   * @type {{ [key: string]: any }}
+   * @type {{ [key: string]: ServiceCommand }}
    * @memberof Service
    */
-  commands: { [key: string]: any } = {}
+  commands: { [key: string]: ServiceCommand } = {}
 
   /**
    * 是否已初始化服务
@@ -51,22 +52,28 @@ export class Service {
    *
    * @type {{
    *     id: string
-   *     apply: any
+   *     apply: {
+   *       default: ServicePlugin
+   *       defaultModes?: ServicePluginMode
+   *     }
    *   }[]}
    * @memberof Service
    */
   plugins: {
     id: string
-    apply: any
+    apply: {
+      default: ServicePlugin
+      defaultModes?: ServicePluginModes
+    }
   }[] = []
 
   /**
    * 模式集合
    *
-   * @type {{ [key: string]: any }}
+   * @type {ServicePluginModes}
    * @memberof Service
    */
-  modes: { [key: string]: any } = {}
+  modes: ServicePluginModes = {}
 
   /**
    * 项目配置
@@ -103,7 +110,7 @@ export class Service {
     this.pkgContext = context
     this.pkg = this.resolvePkg()
     this.plugins = this.resolvePlugins()
-    this.modes = this.plugins.reduce((modes, { apply: { defaultModes }}) => {
+    this.modes = this.plugins.reduce<ServicePluginModes>((modes, { apply: { defaultModes }}) => {
       return Object.assign(modes, defaultModes)
     }, {})
   }
@@ -132,12 +139,12 @@ export class Service {
    * 启动服务
    *
    * @param {string} name 当前命令
-   * @param {*} [args={}]
-   * @param {*} [rawArgv=[]]
+   * @param {ServiceRunArgs} [args={ _: undefined }]
+   * @param {string[]} [rawArgv=[]]
    * @returns
    * @memberof Service
    */
-  public async run (name: string, args: any = {}, rawArgv: any = []) {
+  public async run (name: string, args: ServiceRunArgs = { _: undefined }, rawArgv: string[] = []) {
     const mode = args.mode || (name === 'build' && args.watch ? 'development' : this.modes[name])
     this.init(mode)
     args._ = args._ || []
@@ -167,7 +174,7 @@ export class Service {
    * @returns
    * @memberof Service
    */
-  private resolvePkg (context: string = this.context) {
+  private resolvePkg (context: string = this.context): { [key: string]: any } {
     const packageJSONPath = path.join(context, 'package.json')
     if (fs.existsSync(packageJSONPath)) {
       const pgk = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'))
@@ -237,4 +244,66 @@ export class Service {
     }
     return resolved
   }
+}
+
+export interface ServiceCommand {
+  fn: ServiceCommandFn,
+  opts: ServiceCommandOpts
+}
+
+export interface ServiceCommandOpts {
+  /**
+   * Command description.
+   *
+   * @type {string}
+   */
+  description?: string
+
+  /**
+   * Command usage.
+   *
+   * @type {string}
+   */
+  usage?: string
+
+  /**
+   * Command details.
+   *
+   * @type {string}
+   */
+  details?: string
+
+  /**
+   * Command options.
+   *
+   * @type {{
+   *     [key: string]: any
+   *   }}
+   */
+  options?: {
+    [key: string]: any
+  }
+}
+
+export type ServiceCommandFn = (
+  args?: ServiceRunArgs,
+  rawArgs?: string[]
+) => void | Promise<any>
+
+export interface ServiceRunArgs extends minimist.ParsedArgs {
+  mode?: any
+  watch?: any
+  version?: any
+  V?: any
+  help?: any
+  h?: any
+}
+
+export type ServicePlugin = (
+  api: PluginAPI,
+  options: Options
+) => void
+
+export interface ServicePluginModes {
+  [key: string]: string
 }

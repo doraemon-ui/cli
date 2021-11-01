@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { Service } from './Service'
+import { Service, ServiceCommandFn, ServiceCommandOpts } from './Service'
 import { version } from './version'
 
 /**
@@ -83,49 +83,15 @@ export class PluginAPI {
    * Register a command that will become available as `dora [name]`.
    *
    * @param {string} name
-   * @param {(RegisterCommandOpts | RegisterCommandFn | null)} opts
-   * @param {RegisterCommandFn} [fn]
+   * @param {(ServiceCommandOpts | ServiceCommandFn | null)} opts
+   * @param {ServiceCommandFn} [fn]
    * @memberof PluginAPI
    */
-  registerCommand (name: string, opts: RegisterCommandOpts | RegisterCommandFn | null, fn?: RegisterCommandFn) {
+  registerCommand (name: string, opts: ServiceCommandOpts | ServiceCommandFn | null, fn?: ServiceCommandFn) {
     if (typeof opts === 'function') {
       fn = opts
       opts = null
     }
-    this.service.commands[name] = { fn, opts: opts || {}}
+    this.service.commands[name] = { fn, opts: opts as ServiceCommandOpts || {}}
   }
 }
-
-type RegisterCommandOpts = {
-  /**
-   * Command description.
-   *
-   * @type {string}
-   */
-  description?: string
-
-  /**
-   * Command usage.
-   *
-   * @type {string}
-   */
-  usage?: string
-
-  /**
-   * Command options.
-   *
-   * @type {{
-   *     [key: string]: any
-   *   }}
-   */
-  options?: {
-    [key: string]: any
-  }
-}
-
-type RegisterCommandFn = (
-  args?: {
-    [key: string]: any
-  },
-  rawArgs?: any[]
-) => void | Promise<any>
