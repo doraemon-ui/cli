@@ -1,4 +1,6 @@
+import { PluginAPI } from './PluginAPI';
 import { Options } from './options';
+import minimist from 'minimist';
 /**
  * Dora CLI
  *
@@ -16,11 +18,11 @@ export declare class Service {
     /**
      * CLI 命令集合
      *
-     * @type {{ [key: string]: any }}
+     * @type {{ [key: string]: ServiceCommand }}
      * @memberof Service
      */
     commands: {
-        [key: string]: any;
+        [key: string]: ServiceCommand;
     };
     /**
      * 是否已初始化服务
@@ -41,23 +43,27 @@ export declare class Service {
      *
      * @type {{
      *     id: string
-     *     apply: any
+     *     apply: {
+     *       default: ServicePlugin
+     *       defaultModes?: ServicePluginMode
+     *     }
      *   }[]}
      * @memberof Service
      */
     plugins: {
         id: string;
-        apply: any;
+        apply: {
+            default: ServicePlugin;
+            defaultModes?: ServicePluginModes;
+        };
     }[];
     /**
      * 模式集合
      *
-     * @type {{ [key: string]: any }}
+     * @type {ServicePluginModes}
      * @memberof Service
      */
-    modes: {
-        [key: string]: any;
-    };
+    modes: ServicePluginModes;
     /**
      * 项目配置
      *
@@ -99,12 +105,12 @@ export declare class Service {
      * 启动服务
      *
      * @param {string} name 当前命令
-     * @param {*} [args={}]
-     * @param {*} [rawArgv=[]]
+     * @param {ServiceRunArgs} [args={ _: undefined }]
+     * @param {string[]} [rawArgv=[]]
      * @returns
      * @memberof Service
      */
-    run(name: string, args?: any, rawArgv?: any): Promise<any>;
+    run(name: string, args?: ServiceRunArgs, rawArgv?: string[]): Promise<any>;
     /**
      * 解析 package.json 文件
      *
@@ -127,4 +133,51 @@ export declare class Service {
      * @memberof Service
      */
     private loadUserOptions;
+}
+export interface ServiceCommand {
+    fn: ServiceCommandFn;
+    opts: ServiceCommandOpts;
+}
+export interface ServiceCommandOpts {
+    /**
+     * Command description.
+     *
+     * @type {string}
+     */
+    description?: string;
+    /**
+     * Command usage.
+     *
+     * @type {string}
+     */
+    usage?: string;
+    /**
+     * Command details.
+     *
+     * @type {string}
+     */
+    details?: string;
+    /**
+     * Command options.
+     *
+     * @type {{
+     *     [key: string]: any
+     *   }}
+     */
+    options?: {
+        [key: string]: any;
+    };
+}
+export declare type ServiceCommandFn = (args?: ServiceRunArgs, rawArgs?: string[]) => void | Promise<any>;
+export interface ServiceRunArgs extends minimist.ParsedArgs {
+    mode?: any;
+    watch?: any;
+    version?: any;
+    V?: any;
+    help?: any;
+    h?: any;
+}
+export declare type ServicePlugin = (api: PluginAPI, options: Options) => void;
+export interface ServicePluginModes {
+    [key: string]: string;
 }

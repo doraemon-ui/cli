@@ -96,8 +96,8 @@ class PluginAPI {
      * Register a command that will become available as `dora [name]`.
      *
      * @param {string} name
-     * @param {(RegisterCommandOpts | RegisterCommandFn | null)} opts
-     * @param {RegisterCommandFn} [fn]
+     * @param {(ServiceCommandOpts | ServiceCommandFn | null)} opts
+     * @param {ServiceCommandFn} [fn]
      * @memberof PluginAPI
      */
     registerCommand(name, opts, fn) {

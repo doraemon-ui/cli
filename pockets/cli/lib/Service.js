@@ -48,7 +48,7 @@ class Service {
     /**
      * CLI 命令集合
      *
-     * @type {{ [key: string]: any }}
+     * @type {{ [key: string]: ServiceCommand }}
      * @memberof Service
      */
     commands = {};
@@ -71,7 +71,10 @@ class Service {
      *
      * @type {{
      *     id: string
-     *     apply: any
+     *     apply: {
+     *       default: ServicePlugin
+     *       defaultModes?: ServicePluginMode
+     *     }
      *   }[]}
      * @memberof Service
      */
@@ -79,7 +82,7 @@ class Service {
     /**
      * 模式集合
      *
-     * @type {{ [key: string]: any }}
+     * @type {ServicePluginModes}
      * @memberof Service
      */
     modes = {};
@@ -142,12 +145,12 @@ class Service {
      * 启动服务
      *
      * @param {string} name 当前命令
-     * @param {*} [args={}]
-     * @param {*} [rawArgv=[]]
+     * @param {ServiceRunArgs} [args={ _: undefined }]
+     * @param {string[]} [rawArgv=[]]
      * @returns
      * @memberof Service
      */
-    async run(name, args = {}, rawArgv = []) {
+    async run(name, args = { _: undefined }, rawArgv = []) {
         const mode = args.mode || (name === 'build' && args.watch ? 'development' : this.modes[name]);
         this.init(mode);
         args._ = args._ || [];

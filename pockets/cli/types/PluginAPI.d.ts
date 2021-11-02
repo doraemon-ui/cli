@@ -1,4 +1,4 @@
-import { Service } from './Service';
+import { Service, ServiceCommandFn, ServiceCommandOpts } from './Service';
 /**
  * Dora PluginAPI.
  *
@@ -62,37 +62,9 @@ export declare class PluginAPI {
      * Register a command that will become available as `dora [name]`.
      *
      * @param {string} name
-     * @param {(RegisterCommandOpts | RegisterCommandFn | null)} opts
-     * @param {RegisterCommandFn} [fn]
+     * @param {(ServiceCommandOpts | ServiceCommandFn | null)} opts
+     * @param {ServiceCommandFn} [fn]
      * @memberof PluginAPI
      */
-    registerCommand(name: string, opts: RegisterCommandOpts | RegisterCommandFn | null, fn?: RegisterCommandFn): void;
+    registerCommand(name: string, opts: ServiceCommandOpts | ServiceCommandFn | null, fn?: ServiceCommandFn): void;
 }
-declare type RegisterCommandOpts = {
-    /**
-     * Command description.
-     *
-     * @type {string}
-     */
-    description?: string;
-    /**
-     * Command usage.
-     *
-     * @type {string}
-     */
-    usage?: string;
-    /**
-     * Command options.
-     *
-     * @type {{
-     *     [key: string]: any
-     *   }}
-     */
-    options?: {
-        [key: string]: any;
-    };
-};
-declare type RegisterCommandFn = (args?: {
-    [key: string]: any;
-}, rawArgs?: any[]) => void | Promise<any>;
-export {};
