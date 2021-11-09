@@ -15,6 +15,7 @@ page {
 }
 
 .page {
+  min-height: 100%;
   color: rgba(0, 0, 0, .85);
   color: rgba(var(--dora-text-color-rgb), .85);
   background-color: #fff;

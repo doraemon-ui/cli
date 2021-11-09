@@ -134,10 +134,24 @@ export declare class Service {
      */
     private loadUserOptions;
 }
+/**
+ * CLI 服务对应的命令
+ *
+ * @export
+ * @interface ServiceCommand
+ */
 export interface ServiceCommand {
+    /** 命令对应的函数 */
     fn: ServiceCommandFn;
+    /** 命令对应的参数 */
     opts: ServiceCommandOpts;
 }
+/**
+ * 命令对应的参数
+ *
+ * @export
+ * @interface ServiceCommandOpts
+ */
 export interface ServiceCommandOpts {
     /**
      * Command description.
@@ -168,16 +182,45 @@ export interface ServiceCommandOpts {
         [key: string]: any;
     };
 }
+/**
+ * 命令对应的函数
+ *
+ * @export
+ */
 export declare type ServiceCommandFn = (args?: ServiceRunArgs, rawArgs?: string[]) => void | Promise<any>;
+/**
+ * CLI 服务启动的参数
+ *
+ * @export
+ * @interface ServiceRunArgs
+ * @extends {minimist.ParsedArgs}
+ */
 export interface ServiceRunArgs extends minimist.ParsedArgs {
+    /** 模式 */
     mode?: any;
+    /** 监听 */
     watch?: any;
+    /** 版本 */
     version?: any;
+    /** 版本, 缩写 */
     V?: any;
+    /** 帮助 */
     help?: any;
+    /** 帮助, 缩写 */
     h?: any;
 }
+/**
+ * 插件对应的函数
+ *
+ * @export
+ */
 export declare type ServicePlugin = (api: PluginAPI, options: Options) => void;
+/**
+ * 插件对应的模式
+ *
+ * @export
+ * @interface ServicePluginModes
+ */
 export interface ServicePluginModes {
     [key: string]: string;
 }
