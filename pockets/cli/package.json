@@ -1,7 +1,7 @@
 {
   "name": "@doraemon-ui/cli",
   "private": false,
-  "version": "0.0.2-alpha.30",
+  "version": "0.0.2-alpha.31",
   "description": "Command line interface for rapid doraemon-ui development",
   "bin": {
     "dora": "./lib/bin/cli.js"
