@@ -107,6 +107,7 @@ async function rewriteDemo(rootName, author, packageJSON, cwd) {
         author,
         keywords: [...packageJSON.keywords, ...componentName.split('.')],
         dependencies: {
+            ...packageJSON.dependencies,
             [packageName]: `^${packageVer}`,
         },
     }));
