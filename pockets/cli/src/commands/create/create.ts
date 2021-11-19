@@ -6,6 +6,9 @@ import { installPackage as install } from '../install'
 import { copyFolder } from '../../utils/copy'
 import { ComponentType, getComponentType, getNpmScope, NpmScope } from '../../utils/prompt'
 import { rewrite } from '../../utils/rewrite'
+import { PackageJson } from 'types-package-json'
+
+type PkgFn<T = PackageJson> = (pkg: Partial<T>) => Partial<T | { keywords?: string[] }>
 
 /**
  * 下划线转大写驼峰
@@ -20,7 +23,7 @@ function toUpperCase (str: string, split: string = '-') {
   }, '')
 }
 
-function renderJSON (content: object, getData: Function) {
+function renderJSON<T = any> (content: object, getData: PkgFn<T>) {
   const data = getData.call(null, { ...content })
   for (let key in data) {
     content[key] = data[key]
@@ -37,7 +40,7 @@ function renderFile (content: string, packageName: string = '', componentNameSho
     .replace(/demo-lib/g, componentNameShort)
 }
 
-function rewritePackageJSON (componentPath: string, getData: Function) {
+function rewritePackageJSON (componentPath: string, getData: PkgFn) {
   return rewrite({
     filePath: componentPath,
     fileName: 'package.json',
@@ -67,7 +70,7 @@ function rewriteReadme (componentPath: string, packageName: string) {
   })
 }
 
-async function rewriteDemo (rootName: string, author: any, packageJSON: any, cwd) {
+async function rewriteDemo (rootName: string, author: string, packageJSON: PackageJson, cwd: string) {
   const distDir = path.join(cwd, rootName, 'proscenium')
   const packageName = packageJSON.name
   const packageVer = packageJSON.version
@@ -88,8 +91,9 @@ async function rewriteDemo (rootName: string, author: any, packageJSON: any, cwd
     private: true,
     description: `${componentName.split('.').join(' ')} component demo for doraemon-ui`,
     author,
-    keywords: [...packageJSON.keywords, ...componentName.split('.')],
+    keywords: [...(packageJSON.keywords as unknown as string[]), ...componentName.split('.')],
     dependencies: {
+      ...packageJSON.dependencies,
       [packageName]: `^${packageVer}`,
     },
   }))
@@ -159,7 +163,7 @@ async function createComponent (cwd: string, name: string, type: ComponentType, 
   }
 
   const scope = npmScope || await getNpmScope()
-  const author = gitUsername()
+  const author: string = gitUsername()
 
   const template = path.join(templatesDir, type)
   const distDir = path.join(cwd, name)
@@ -172,7 +176,7 @@ async function createComponent (cwd: string, name: string, type: ComponentType, 
     private: false,
     description: `${name.split('.').join(' ')} component for doraemon-ui`,
     author,
-    keywords: [...packageJSON.keywords, ...name.split('.')],
+    keywords: [...(packageJSON.keywords as unknown as string[]), ...name.split('.')],
   }))
   await rewriteTypeDeclare(distDir, packageName)
   await rewriteReadme(distDir, packageName)
@@ -268,7 +272,7 @@ async function createLib (cwd: string, name: string, type: ComponentType, npmSco
     private: false,
     description: `${name.split('.').join(' ')} lib for doraemon-ui`,
     author,
-    keywords: [...packageJSON.keywords, ...name.split('.')],
+    keywords: [...(packageJSON.keywords as unknown as string[]), ...name.split('.')],
   }))
   await rewriteTypeDeclare(distDir, packageName)
   await rewriteReadme(distDir, packageName)
