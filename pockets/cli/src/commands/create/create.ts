@@ -101,9 +101,10 @@ async function rewriteDemo (rootName: string, author: string, packageJSON: Packa
     filePath: path.join(distDir, 'pages/index'),
     fileName: 'index.json',
     transformData (data) {
-      return renderJSON(data, () => ({
+      return renderJSON(data, (componentJson) => ({
         navigationBarTitleText: componentName,
         usingComponents: {
+          ...componentJson.usingComponents,
           [`dora-${componentNameShort}`]: `${packageName}/index`,
         },
       }))
