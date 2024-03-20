@@ -96,12 +96,12 @@ async function rewriteDemo(rootName, author, packageJSON, cwd) {
         fileName: 'project.config.json',
         transformData(data) {
             return renderJSON(data, () => ({
-                projectname: `${packageName}-proscenium`,
+                projectname: componentName,
             }));
         },
     });
     await rewritePackageJSON(path.join(distDir, 'pages'), (packageJSON) => ({
-        name: `${packageName}-proscenium`,
+        name: componentName,
         private: true,
         description: `${componentName.split('.').join(' ')} component demo for doraemon-ui`,
         author,

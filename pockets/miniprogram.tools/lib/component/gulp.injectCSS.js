@@ -23,14 +23,18 @@ const util = __importStar(require("gulp-util"));
 const through2 = __importStar(require("through2"));
 const injectCSS = () => {
     // 正则匹配
+    const INJECT_REG = /\/\*! inject:wxss:(.*) \*\//;
+    const END_INJECT_REG = /\/\*! endinject \*\//;
     const replace = (str = '') => {
-        const startTag = str.match(/\/\*! inject:wxss:(.*) \*\//);
-        const endTag = str.match(/\/\*! endinject \*\//);
-        if (startTag && endTag) {
-            const transformedContents = str.slice(startTag[0].length + startTag.index, endTag.index);
-            return str.replace(startTag[0], '')
+        let startTag = str.match(INJECT_REG);
+        let endTag = str.match(END_INJECT_REG);
+        while (startTag && endTag) {
+            const transformedContents = str.slice(startTag[0].length + (startTag.index || 0), endTag.index);
+            str = str.replace(startTag[0], '')
                 .replace(transformedContents, `@import '${startTag[1]}';\n`)
                 .replace(endTag[0], '');
+            startTag = str.match(INJECT_REG);
+            endTag = str.match(END_INJECT_REG);
         }
         return str;
     };

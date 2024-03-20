@@ -12,7 +12,7 @@ async function checkVersion() {
     const packageName = packageJson.name || '';
     if (currentVersion && packageName) {
         try {
-            const { data: packageMetadata } = await axios_1.default.get(`https://registry.npm.taobao.org/${packageName}`);
+            const { data: packageMetadata } = await axios_1.default.get(`https://registry.npmmirror.com/${packageName}`);
             if (!packageMetadata || !packageMetadata['dist-tags']) {
                 return;
             }
