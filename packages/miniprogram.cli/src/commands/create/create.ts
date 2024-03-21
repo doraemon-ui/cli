@@ -50,22 +50,22 @@ function rewritePackageJSON (componentPath: string, getData: PkgFn) {
   })
 }
 
-function rewriteTypeDeclare (componentPath: string, packageName: string) {
+function rewriteTypeDeclare (componentPath: string, packageName: string, componentNameShort: string) {
   return rewrite({
     filePath: componentPath,
     fileName: 'index.d.ts',
     transformData (data) {
-      return renderFile(data, packageName)
+      return renderFile(data, packageName, componentNameShort)
     },
   })
 }
 
-function rewriteReadme (componentPath: string, packageName: string) {
+function rewriteReadme (componentPath: string, packageName: string, componentNameShort: string) {
   return rewrite({
     filePath: componentPath,
     fileName: 'README.md',
     transformData (data) {
-      return renderFile(data, packageName)
+      return renderFile(data, packageName, componentNameShort)
     },
   })
 }
@@ -179,8 +179,8 @@ async function createComponent (cwd: string, name: string, type: ComponentType, 
     author,
     keywords: [...(packageJSON.keywords as unknown as string[]), ...name.split('.')],
   }))
-  await rewriteTypeDeclare(distDir, packageName)
-  await rewriteReadme(distDir, packageName)
+  await rewriteTypeDeclare(distDir, packageName, componentNameShort)
+  await rewriteReadme(distDir, packageName, componentNameShort)
   await rewrite({
     filePath: path.join(distDir, 'src'),
     fileName: 'index.ts',
@@ -275,8 +275,8 @@ async function createLib (cwd: string, name: string, type: ComponentType, npmSco
     author,
     keywords: [...(packageJSON.keywords as unknown as string[]), ...name.split('.')],
   }))
-  await rewriteTypeDeclare(distDir, packageName)
-  await rewriteReadme(distDir, packageName)
+  await rewriteTypeDeclare(distDir, packageName, componentNameShort)
+  await rewriteReadme(distDir, packageName, componentNameShort)
   await rewrite({
     filePath: path.join(distDir, 'src'),
     fileName: 'index.ts',

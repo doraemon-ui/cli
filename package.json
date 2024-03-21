@@ -25,6 +25,7 @@
     "micromatch": "^4.0.4",
     "miniprogram-api-typings": "^3.4.3",
     "miniprogram-simulate": "^1.4.2",
+    "pnpm": "^7.11.0",
     "stylelint": "^13.13.1",
     "stylelint-config-standard": "^22.0.0",
     "ts-jest": "^27.0.3",
@@ -36,8 +37,8 @@
     "eslint:fix": "eslint packages/** --ext js,ts --fix",
     "stylelint": "stylelint \"packages/**/*.less\" --syntax less",
     "stylelint:fix": "stylelint \"packages/**/*.less\" --syntax less --fix",
-    "lint": "npm run eslint && npm run stylelint",
-    "lint:fix": "npm run eslint:fix && npm run stylelint:fix",
+    "lint": "pnpm run eslint && pnpm run stylelint",
+    "lint:fix": "pnpm run eslint:fix && pnpm run stylelint:fix",
     "prepare": "husky install",
     "pre-commit": "lint-staged",
     "changed": "lerna changed --include-merged-tags",
@@ -45,11 +46,12 @@
     "publish:beta": "lerna publish prerelease --include-merged-tags --allow-branch '**' --pre-dist-tag beta --preid beta --force-git-tag",
     "publish:omega": "lerna publish prerelease --include-merged-tags --allow-branch '**' --pre-dist-tag omega --preid omega --force-git-tag",
     "release": "lerna publish --conventional-commits --conventional-graduate --include-merged-tags --changelog-preset angular",
-    "postinstall": "lerna bootstrap"
+    "preinstall": "npx only-allow pnpm"
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run pre-commit"
+      "pre-commit": "pnpm run pre-commit"
     }
-  }
+  },
+  "packageManager": "pnpm@7.11.0"
 }
