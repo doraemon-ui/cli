@@ -7,10 +7,6 @@ const { classNames } = Doraemon.util
       type: String,
       default: 'dora-demo-component',
     },
-    darkmode: {
-      type: String,
-      default: Doraemon.config.darkmode,
-    },
   },
 })
 class DemoComponent extends Doraemon {
@@ -21,14 +17,6 @@ class DemoComponent extends Doraemon {
    * @memberof DemoComponent
    */
   prefixCls!: string
-
-  /**
-   * 当前的主题
-   *
-   * @type {string}
-   * @memberof DemoComponent
-   */
-  darkmode!: string
 
   @Prop({
     type: Boolean,
