@@ -1,7 +1,7 @@
 {
   "name": "@doraemon-ui/miniprogram.cli",
   "private": false,
-  "version": "0.0.2-alpha.36",
+  "version": "0.0.2-alpha.37",
   "description": "Command line interface for rapid doraemon-ui development",
   "bin": {
     "dora": "./lib/bin/cli.js"
@@ -25,7 +25,7 @@
     "preversion": "npm run build"
   },
   "dependencies": {
-    "@doraemon-ui/miniprogram.tools": "^0.0.2-alpha.18",
+    "@doraemon-ui/miniprogram.tools": "^0.0.2-alpha.19",
     "axios": "^0.21.1",
     "chalk": "^4.1.1",
     "command-exists": "^1.2.9",
