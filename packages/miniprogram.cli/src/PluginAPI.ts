@@ -92,6 +92,6 @@ export class PluginAPI {
       fn = opts
       opts = null
     }
-    this.service.commands[name] = { fn, opts: opts as ServiceCommandOpts || {}}
+    this.service.commands[name] = { fn: fn as ServiceCommandFn, opts: opts as ServiceCommandOpts || {}}
   }
 }

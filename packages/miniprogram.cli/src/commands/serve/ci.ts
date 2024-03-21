@@ -32,7 +32,7 @@ export class MiniprogramServer {
    */
   constructor (devServer: DevServer) {
     const protocol = devServer.https ? 'https' : 'http'
-    this.project = devServer.entry
+    this.project = devServer.entry as string
     this.publicUrl = `${protocol}://${devServer.host}:${devServer.port}/v2`
   }
 

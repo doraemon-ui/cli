@@ -121,7 +121,7 @@ export class Service {
    * @param {string} [mode=process.env.DORA_CLI_CONTEXT]
    * @memberof Service
    */
-  private init (mode: string = process.env.DORA_CLI_CONTEXT) {
+  private init (mode: string = process.env.DORA_CLI_CONTEXT as string) {
     if (this.initialized) {
       return
     }
@@ -144,7 +144,7 @@ export class Service {
    * @returns
    * @memberof Service
    */
-  public async run (name: string, args: ServiceRunArgs = { _: undefined }, rawArgv: string[] = []) {
+  public async run (name: string, args: ServiceRunArgs = { _: [] }, rawArgv: string[] = []) {
     const mode = args.mode || (name === 'build' && args.watch ? 'development' : this.modes[name])
     this.init(mode)
     args._ = args._ || []
@@ -213,7 +213,7 @@ export class Service {
    */
   private loadUserOptions () {
     // dora.config.js
-    let fileConfig: Options, resolved: Options
+    let fileConfig: Options | null = null, resolved: Options
     const configPath = (
       process.env.DORA_CLI_CONFIG_PATH ||
       path.resolve(this.context, 'dora.config.js')
@@ -305,8 +305,8 @@ export interface ServiceCommandOpts {
  * @export
  */
 export type ServiceCommandFn = (
-  args?: ServiceRunArgs,
-  rawArgs?: string[]
+  args: ServiceRunArgs,
+  rawArgs: string[]
 ) => void | Promise<any>
 
 /**
