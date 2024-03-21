@@ -1,7 +1,11 @@
 "use strict";
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
 }) : (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     o[k2] = m[k];
@@ -67,21 +71,21 @@ function rewritePackageJSON(componentPath, getData) {
         },
     });
 }
-function rewriteTypeDeclare(componentPath, packageName) {
+function rewriteTypeDeclare(componentPath, packageName, componentNameShort) {
     return (0, rewrite_1.rewrite)({
         filePath: componentPath,
         fileName: 'index.d.ts',
         transformData(data) {
-            return renderFile(data, packageName);
+            return renderFile(data, packageName, componentNameShort);
         },
     });
 }
-function rewriteReadme(componentPath, packageName) {
+function rewriteReadme(componentPath, packageName, componentNameShort) {
     return (0, rewrite_1.rewrite)({
         filePath: componentPath,
         fileName: 'README.md',
         transformData(data) {
-            return renderFile(data, packageName);
+            return renderFile(data, packageName, componentNameShort);
         },
     });
 }
@@ -188,8 +192,8 @@ async function createComponent(cwd, name, type, npmScope) {
         author,
         keywords: [...packageJSON.keywords, ...name.split('.')],
     }));
-    await rewriteTypeDeclare(distDir, packageName);
-    await rewriteReadme(distDir, packageName);
+    await rewriteTypeDeclare(distDir, packageName, componentNameShort);
+    await rewriteReadme(distDir, packageName, componentNameShort);
     await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'src'),
         fileName: 'index.ts',
@@ -278,8 +282,8 @@ async function createLib(cwd, name, type, npmScope) {
         author,
         keywords: [...packageJSON.keywords, ...name.split('.')],
     }));
-    await rewriteTypeDeclare(distDir, packageName);
-    await rewriteReadme(distDir, packageName);
+    await rewriteTypeDeclare(distDir, packageName, componentNameShort);
+    await rewriteReadme(distDir, packageName, componentNameShort);
     await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'src'),
         fileName: 'index.ts',

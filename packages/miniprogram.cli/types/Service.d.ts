@@ -187,7 +187,7 @@ export interface ServiceCommandOpts {
  *
  * @export
  */
-export declare type ServiceCommandFn = (args?: ServiceRunArgs, rawArgs?: string[]) => void | Promise<any>;
+export type ServiceCommandFn = (args: ServiceRunArgs, rawArgs: string[]) => void | Promise<any>;
 /**
  * CLI 服务启动的参数
  *
@@ -214,7 +214,7 @@ export interface ServiceRunArgs extends minimist.ParsedArgs {
  *
  * @export
  */
-export declare type ServicePlugin = (api: PluginAPI, options: Options) => void;
+export type ServicePlugin = (api: PluginAPI, options: Options) => void;
 /**
  * 插件对应的模式
  *
