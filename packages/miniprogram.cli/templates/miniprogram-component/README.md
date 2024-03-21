@@ -18,7 +18,7 @@ yarn add {{packageName}}
 
 ### 在 page.json 中引入组件
 
-[json](./proscenium/pages/index/index.json ':include :type=code')
+[json](./playground/pages/index/index.json ':include :type=code')
 
 ### 示例代码
 
@@ -28,15 +28,15 @@ yarn add {{packageName}}
 
 #### **WXML**
 
-[wxml](./proscenium/pages/index/index.wxml ':include :type=code')
+[wxml](./playground/pages/index/index.wxml ':include :type=code')
 
 #### **JAVASCRIPT**
 
-[js](./proscenium/pages/index/index.js ':include :type=code')
+[js](./playground/pages/index/index.js ':include :type=code')
 
 #### **WXSS**
 
-[wxss](./proscenium/pages/index/index.wxss ':include :type=code')
+[wxss](./playground/pages/index/index.wxss ':include :type=code')
 
 <!-- tabs:end -->
 

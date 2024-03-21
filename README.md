@@ -10,9 +10,9 @@ Dora CLI 需要 [Node.js](https://nodejs.org/) v8.9 或更高版本 (推荐 v10 
 可以使用下列任一命令安装这个新的包：
 
 ```bash
-npm install -g @doraemon-ui/cli
+npm install -g @doraemon-ui/miniprogram.cli
 # OR
-yarn global add @doraemon-ui/cli
+yarn global add @doraemon-ui/miniprogram.cli
 ```
 
 安装之后，你就可以在命令行中访问 `dora` 命令。你可以通过简单运行 `dora`，看看是否展示出了一份所有可用命令的帮助信息，来验证它是否安装成功。
@@ -30,9 +30,9 @@ dora -V
 如需升级全局的 `Dora CLI` 包，请运行：
 
 ```bash
-npm update -g @doraemon-ui/cli
+npm update -g @doraemon-ui/miniprogram.cli
 # OR
-yarn global upgrade --latest @doraemon-ui/cli
+yarn global upgrade --latest @doraemon-ui/miniprogram.cli
 ```
 
 ## 创建一个项目
@@ -61,7 +61,7 @@ dora install eslint
 
 ### 使用命令
 
-在一个 Dora CLI 项目中，`@doraemon-ui/cli` 安装了一个名为 `dora` 的命令。你可以在 npm scripts 中以 `dora`、或者从终端中以 `./node_modules/.bin/dora` 访问这个命令。
+在一个 Dora CLI 项目中，`@doraemon-ui/miniprogram.cli` 安装了一个名为 `dora` 的命令。你可以在 npm scripts 中以 `dora`、或者从终端中以 `./node_modules/.bin/dora` 访问这个命令。
 
 ```json
 {

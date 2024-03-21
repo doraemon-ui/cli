@@ -3,7 +3,7 @@
   "npmClient": "yarn",
   "useWorkspaces": true,
   "packages": [
-    "pockets/*"
+    "packages/*"
   ],
   "command": {
     "publish": {
@@ -15,7 +15,7 @@
     }
   },
   "ignoreChanges": [
-    "proscenium/**",
+    "playground/**",
     "**/package-lock.json",
     "**/*.md",
     "**/.*",

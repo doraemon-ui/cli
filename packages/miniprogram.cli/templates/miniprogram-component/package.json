@@ -15,7 +15,7 @@
     "doraemon-ui"
   ],
   "scripts": {
-    "serve": "dora serve ./proscenium --open --build-npm",
+    "serve": "dora serve ./playground --open --build-npm",
     "build:dev": "dora build --watch",
     "build": "dora build",
     "test": "cross-env NODE_ENV=testing jest --coverage",
@@ -27,7 +27,7 @@
     "@doraemon-ui/style": "^0.0.1-alpha.1"
   },
   "devDependencies": {
-    "@doraemon-ui/cli": "^0.0.2-alpha.12",
+    "@doraemon-ui/miniprogram.cli": "^0.0.2-alpha.12",
     "cross-env": "^7.0.3",
     "jest": "^27.0.6",
     "rimraf": "^3.0.2"

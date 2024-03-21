@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "pockets/*"
+      "packages/*"
     ]
   },
   "devDependencies": {
@@ -32,10 +32,10 @@
     "typescript": "^4.1.2"
   },
   "scripts": {
-    "eslint": "eslint pockets/** --ext js,ts",
-    "eslint:fix": "eslint pockets/** --ext js,ts --fix",
-    "stylelint": "stylelint \"pockets/**/*.less\" --syntax less",
-    "stylelint:fix": "stylelint \"pockets/**/*.less\" --syntax less --fix",
+    "eslint": "eslint packages/** --ext js,ts",
+    "eslint:fix": "eslint packages/** --ext js,ts --fix",
+    "stylelint": "stylelint \"packages/**/*.less\" --syntax less",
+    "stylelint:fix": "stylelint \"packages/**/*.less\" --syntax less --fix",
     "lint": "npm run eslint && npm run stylelint",
     "lint:fix": "npm run eslint:fix && npm run stylelint:fix",
     "prepare": "husky install",

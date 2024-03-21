@@ -71,7 +71,7 @@ function rewriteReadme (componentPath: string, packageName: string) {
 }
 
 async function rewriteDemo (rootName: string, author: string, packageJSON: PackageJson, cwd: string) {
-  const distDir = path.join(cwd, rootName, 'proscenium')
+  const distDir = path.join(cwd, rootName, 'playground')
   const packageName = packageJSON.name
   const packageVer = packageJSON.version
   const componentName = packageName.split('/')[packageName.split('/').length - 1]

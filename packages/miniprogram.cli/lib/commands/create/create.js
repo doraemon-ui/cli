@@ -86,7 +86,7 @@ function rewriteReadme(componentPath, packageName) {
     });
 }
 async function rewriteDemo(rootName, author, packageJSON, cwd) {
-    const distDir = path.join(cwd, rootName, 'proscenium');
+    const distDir = path.join(cwd, rootName, 'playground');
     const packageName = packageJSON.name;
     const packageVer = packageJSON.version;
     const componentName = packageName.split('/')[packageName.split('/').length - 1];
