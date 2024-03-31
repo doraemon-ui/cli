@@ -48,8 +48,20 @@ yarn add {{packageName}}
 | --- | --- | --- | --- |
 | prefixCls | `string` | 自定义类名前缀 | dora-demo-component |
 
+### DemoComponent slot
+
+| 名称 | 描述       |
+| ---- | ---------- |
+| -    | 自定义内容 |
+
 ### DemoComponent externalClasses
 
 | 名称 | 描述 |
 | --- | --- |
 | dora-class | 根节点样式类 |
+
+## CSS Variables
+
+| 属性 | 描述 | 默认值 | 全局变量 |
+| --- | --- | --- | --- |
+| --text-color | 文字颜色 | `#fff` | - |

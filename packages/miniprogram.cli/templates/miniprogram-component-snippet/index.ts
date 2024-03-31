@@ -1,15 +1,11 @@
 import { defineComponentHOC, Doraemon, Component, Prop } from '@doraemon-ui/miniprogram.core-js'
-const { classNames } = Doraemon.util
+const { classNames, styleToCssString } = Doraemon.util
 
 @Component({
   props: {
     prefixCls: {
       type: String,
       default: 'dora-demo-component',
-    },
-    darkmode: {
-      type: String,
-      default: Doraemon.config.darkmode,
     },
   },
 })
@@ -22,14 +18,6 @@ class DemoComponent extends Doraemon {
    */
   prefixCls!: string
 
-  /**
-   * 当前的主题
-   *
-   * @type {string}
-   * @memberof DemoComponent
-   */
-  darkmode!: string
-
   @Prop({
     type: Boolean,
     default: false,
@@ -41,6 +29,12 @@ class DemoComponent extends Doraemon {
     default: 'default',
   })
   hoverClass: string
+
+  @Prop({
+    type: Object,
+    default: null,
+  })
+  wrapStyle: Partial<CSSStyleDeclaration>
 
   get classes () {
     const { prefixCls, hoverClass, disabled } = this
@@ -55,6 +49,10 @@ class DemoComponent extends Doraemon {
     }
   }
 
+  get containerStyle () {
+    return this.wrapStyle ? styleToCssString(this.wrapStyle) : ''
+  }
+
   onClick () {
     if (!this.disabled) {
       this.$emit('click')
@@ -62,4 +60,5 @@ class DemoComponent extends Doraemon {
   }
 }
 
+export type DemoComponentInstance = DemoComponent
 export default defineComponentHOC()(DemoComponent)

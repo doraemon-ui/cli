@@ -1,8 +1,8 @@
 <view
-  data-dora-theme="{{ darkmode }}"
   class="dora-class {{ classes.wrap }}"
   hover-class="dora-hover-class {{ !disabled ? classes.hover : 'none' }}"
   bindtap="onClick"
+  style="{{ containerStyle }}"
 >
   <slot></slot>
 </view>

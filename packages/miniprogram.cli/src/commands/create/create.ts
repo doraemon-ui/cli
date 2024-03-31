@@ -86,6 +86,15 @@ async function rewriteDemo (rootName: string, author: string, packageJSON: Packa
       }))
     },
   })
+  await rewrite({
+    filePath: distDir,
+    fileName: 'project.private.config.json',
+    transformData (data) {
+      return renderJSON(data, () => ({
+        projectname: componentName,
+      }))
+    },
+  })
   await rewritePackageJSON(path.join(distDir, 'pages'), (packageJSON) => ({
     name: componentName,
     private: true,

@@ -1,5 +1,5 @@
 import { defineComponentHOC, Doraemon, Component, Prop } from '@doraemon-ui/miniprogram.core-js'
-const { classNames } = Doraemon.util
+const { classNames, styleToCssString } = Doraemon.util
 
 @Component({
   props: {
@@ -30,6 +30,12 @@ class DemoComponent extends Doraemon {
   })
   hoverClass: string
 
+  @Prop({
+    type: Object,
+    default: null,
+  })
+  wrapStyle: Partial<CSSStyleDeclaration>
+
   get classes () {
     const { prefixCls, hoverClass, disabled } = this
     const wrap = classNames(prefixCls, {
@@ -43,6 +49,10 @@ class DemoComponent extends Doraemon {
     }
   }
 
+  get containerStyle () {
+    return this.wrapStyle ? styleToCssString(this.wrapStyle) : ''
+  }
+
   onClick () {
     if (!this.disabled) {
       this.$emit('click')
@@ -50,4 +60,5 @@ class DemoComponent extends Doraemon {
   }
 }
 
+export type DemoComponentInstance = DemoComponent
 export default defineComponentHOC()(DemoComponent)
