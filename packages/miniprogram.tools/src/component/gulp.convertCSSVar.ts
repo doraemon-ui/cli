@@ -110,7 +110,7 @@ function gulpProfixer(opts) {
     // 给所有通过变量赋值的颜色多加一个保底的颜色
     csstree.walk(ast, function (pnode, item, list) {
       if (pnode.type == 'Declaration') {
-        let varNames = []
+        let varNames: string[] = []
         csstree.walk(pnode, function (node) {
           if (node.type === 'Function' && node.name === 'var') {
             // 取出颜色的变量名字

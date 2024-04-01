@@ -34,11 +34,12 @@ export function rollupConfig (opts: RollupConfig = {}) {
   const banner = util.banner()
   const packageJSON = util.pkg()
   const options: RollupConfig = Object.assign({}, defaultOpts, opts)
+  const internals = options.internals || []
   const peerDependencies = packageJSON.peerDependencies || {}
   const dependencies = packageJSON.dependencies || {}
   const externalDependencies = options.bundleDependencies ? Object.keys(peerDependencies) : Object.keys(Object.assign({}, dependencies, peerDependencies))
-  const externals = id => externalDependencies.filter(dep => options.internals.indexOf(dep) === -1).some(dep => (new RegExp(`^${dep}`)).test(id))
-  const input = path.join(buildDir, options.entry) || path.join(buildDir, 'src/index.ts')
+  const externals = id => externalDependencies.filter(dep => internals.indexOf(dep) === -1).some(dep => (new RegExp(`^${dep}`)).test(id))
+  const input = path.join(buildDir, options.entry as string) || path.join(buildDir, 'src/index.ts')
   const outputFile = options.outputFile || path.join(buildDir, 'miniprogram_dist/index.js')
   const copyFile = [
     { src: 'src/**/*.json', dest: 'miniprogram_dist' },
@@ -79,7 +80,7 @@ export function rollupConfig (opts: RollupConfig = {}) {
       ]),
     },
   }
-  const rollupConfig = specificConfig[options.format]
+  const rollupConfig = specificConfig[options.format as 'esm']
   const inputOptions: RollupInputOptions = {
     input,
     // external: rollupConfig.external || [],

@@ -102,7 +102,7 @@ gulp.task('watch', watch)
 // Wire up logging events
 function logEvents (gulpInst, onListening) {
 
-  const loggedErrors = []
+  const loggedErrors: any[] = []
 
   gulpInst.on('start', async function(evt) {
     onListening && await onListening('start')
@@ -150,7 +150,7 @@ function logEvents (gulpInst, onListening) {
  */
 function gulp4Build (opts: GulpConfig = {}) {
   const tasks = opts._
-  const toRun = tasks.length ? tasks : ['default']
+  const toRun = tasks?.length ? tasks : ['default']
   logEvents(gulp, opts.onListening)
   try {
     console.info(ansi.green(opts.onStartMsg || 'Powered by gulp4'))
