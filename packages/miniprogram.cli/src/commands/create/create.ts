@@ -95,6 +95,7 @@ async function rewriteDemo (rootName: string, author: string, packageJSON: Packa
       }))
     },
   })
+  await rewriteReadme(distDir, packageName, componentName)
   await rewritePackageJSON(path.join(distDir, 'pages'), (packageJSON) => ({
     name: componentName,
     private: true,
