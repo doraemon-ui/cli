@@ -113,6 +113,7 @@ async function rewriteDemo(rootName, author, packageJSON, cwd) {
             }));
         },
     });
+    await rewriteReadme(distDir, packageName, componentName);
     await rewritePackageJSON(path.join(distDir, 'pages'), (packageJSON) => ({
         name: componentName,
         private: true,

@@ -59,10 +59,11 @@ function rollupConfig(opts = {}) {
     const banner = util_1.default.banner();
     const packageJSON = util_1.default.pkg();
     const options = Object.assign({}, defaultOpts, opts);
+    const internals = options.internals || [];
     const peerDependencies = packageJSON.peerDependencies || {};
     const dependencies = packageJSON.dependencies || {};
     const externalDependencies = options.bundleDependencies ? Object.keys(peerDependencies) : Object.keys(Object.assign({}, dependencies, peerDependencies));
-    const externals = id => externalDependencies.filter(dep => options.internals.indexOf(dep) === -1).some(dep => (new RegExp(`^${dep}`)).test(id));
+    const externals = id => externalDependencies.filter(dep => internals.indexOf(dep) === -1).some(dep => (new RegExp(`^${dep}`)).test(id));
     const input = path.join(buildDir, options.entry) || path.join(buildDir, 'src/index.ts');
     const outputFile = options.outputFile || path.join(buildDir, 'miniprogram_dist/index.js');
     const copyFile = [

@@ -148,7 +148,7 @@ function logEvents(gulpInst, onListening) {
  */
 function gulp4Build(opts = {}) {
     const tasks = opts._;
-    const toRun = tasks.length ? tasks : ['default'];
+    const toRun = tasks?.length ? tasks : ['default'];
     logEvents(gulp_1.default, opts.onListening);
     try {
         console.info(ansi_1.default.green(opts.onStartMsg || 'Powered by gulp4'));
