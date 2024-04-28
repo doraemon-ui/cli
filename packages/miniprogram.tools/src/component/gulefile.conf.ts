@@ -16,6 +16,7 @@ import autoprefixer from 'autoprefixer'
 import convertCSSVar from './gulp.convertCSSVar'
 import injectCSS from './gulp.injectCSS'
 import px2rpx from './gulp.px2rpx'
+import convertJson from './gulp.convertJson'
 import util from '../shared/util'
 
 const buildDir = util.buildDir
@@ -57,6 +58,7 @@ const config = Object.assign({
 const copy = (paths) => () => (
   gulp
     .src(paths.entry)
+    .pipe(convertJson())
     .pipe(gulp.dest(paths.outputDir))
 )
 
