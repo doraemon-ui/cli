@@ -45,6 +45,7 @@ const autoprefixer_1 = __importDefault(require("autoprefixer"));
 const gulp_convertCSSVar_1 = __importDefault(require("./gulp.convertCSSVar"));
 const gulp_injectCSS_1 = __importDefault(require("./gulp.injectCSS"));
 const gulp_px2rpx_1 = __importDefault(require("./gulp.px2rpx"));
+const gulp_convertJson_1 = __importDefault(require("./gulp.convertJson"));
 const util_1 = __importDefault(require("../shared/util"));
 const buildDir = util_1.default.buildDir;
 const rootDir = util_1.default.rootDir;
@@ -79,6 +80,7 @@ const config = Object.assign({
 }, fs.existsSync(doraConfig) ? require(doraConfig) : {});
 const copy = (paths) => () => (gulp_1.default
     .src(paths.entry)
+    .pipe((0, gulp_convertJson_1.default)())
     .pipe(gulp_1.default.dest(paths.outputDir)));
 const scripts = (paths) => () => (gulp_1.default
     .src(paths.entry)
