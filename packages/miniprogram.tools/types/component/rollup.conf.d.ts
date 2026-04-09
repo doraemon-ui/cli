@@ -2,8 +2,8 @@ declare function rollupBuild(opts?: ComponentConfig): Promise<void> | Promise<im
 export { rollupBuild as buildComponent };
 interface ComponentConfig {
     _?: string | string[];
-    series?: "series" | "parallel";
+    series?: 'series' | 'parallel';
     onStartMsg?: string;
     onCloseMsg?: string;
-    onListening?: (eventName: "start" | "stop" | "error") => Promise<any>;
+    onListening?: (eventName: 'start' | 'stop' | 'error') => Promise<any>;
 }

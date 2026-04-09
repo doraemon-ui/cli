@@ -104,7 +104,7 @@ class PluginAPI {
      * @memberof PluginAPI
      */
     hasPlugin(id) {
-        return this.service.plugins.some(p => id === p.id);
+        return this.service.plugins.some((p) => id === p.id);
     }
     /**
      * Register a command that will become available as `dora [name]`.

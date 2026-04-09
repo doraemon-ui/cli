@@ -54,7 +54,8 @@ const rewrite_1 = require("../../utils/rewrite");
  */
 function toUpperCase(str, split = '-') {
     return str.split(split).reduce((acc, name) => {
-        return acc += `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+        acc += `${name.charAt(0).toUpperCase()}${name.slice(1)}`;
+        return acc;
     }, '');
 }
 function renderJSON(content, getData) {
@@ -152,7 +153,8 @@ async function rewriteDemo(rootName, author, packageJSON, cwd) {
         filePath: path.join(distDir, 'pages/index'),
         fileName: 'index.wxml',
         transformData(data) {
-            return data.replace(/{{componentName}}/g, componentName)
+            return data
+                .replace(/{{componentName}}/g, componentName)
                 .replace(/{{componentFragment}}/g, `<dora-${componentNameShort}>${componentName}</dora-${componentNameShort}>`);
         },
     });
@@ -171,7 +173,7 @@ async function create(cwd, name, componentType, npmScope) {
     if (!name) {
         return Promise.reject('缺少 name 参数');
     }
-    const type = componentType || await (0, prompt_1.getComponentType)();
+    const type = componentType || (await (0, prompt_1.getComponentType)());
     switch (type) {
         case prompt_1.ComponentType.MiniprogramLib:
             createLib(cwd, name, type, npmScope);
@@ -197,7 +199,7 @@ async function createComponent(cwd, name, type, npmScope) {
     if (!name) {
         return Promise.reject('缺少 name 参数');
     }
-    const scope = npmScope || await (0, prompt_1.getNpmScope)();
+    const scope = npmScope || (await (0, prompt_1.getNpmScope)());
     const author = (0, git_user_name_1.default)();
     const template = path.join(config_1.templatesDir, type);
     const distDir = path.join(cwd, name);
@@ -287,7 +289,7 @@ async function createLib(cwd, name, type, npmScope) {
     if (!name) {
         return Promise.reject('缺少 name 参数');
     }
-    const scope = npmScope || await (0, prompt_1.getNpmScope)();
+    const scope = npmScope || (await (0, prompt_1.getNpmScope)());
     const author = (0, git_user_name_1.default)();
     const template = path.join(config_1.templatesDir, type);
     const distDir = path.join(cwd, name);

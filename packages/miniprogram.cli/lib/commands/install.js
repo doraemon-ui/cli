@@ -71,10 +71,7 @@ async function installPackage(to, packageName, dev = false) {
  * 安装 package.json 中的依赖
  */
 async function installPackageDependencies(scope) {
-    await (0, lerna_1.runLernaCommand)([
-        'bootstrap',
-        `--scope=${scope}`,
-    ], `正在安装 ${scope} 的依赖`, '安装完成惹');
+    await (0, lerna_1.runLernaCommand)(['bootstrap', `--scope=${scope}`], `正在安装 ${scope} 的依赖`, '安装完成惹');
 }
 /**
  * 执行 lerna add <packageName>
@@ -85,9 +82,5 @@ async function addPackage(packageName, dev, scope) {
     if (!packageName) {
         return;
     }
-    await (0, lerna_1.runLernaCommand)([
-        'add',
-        packageName,
-        `--scope=${scope}`,
-    ].concat(dev ? ['--dev'] : []), `正在安装 ${packageName} 到当前目录`, '安装完成惹');
+    await (0, lerna_1.runLernaCommand)(['add', packageName, `--scope=${scope}`].concat(dev ? ['--dev'] : []), `正在安装 ${packageName} 到当前目录`, '安装完成惹');
 }

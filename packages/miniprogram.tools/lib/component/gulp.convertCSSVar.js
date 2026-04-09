@@ -106,8 +106,7 @@ function gulpProfixer(opts) {
             visit: 'Declaration',
             enter(node) {
                 //找出变量定义的规则
-                if (node.property &&
-                    node.property.match(/^--/)) {
+                if (node.property && node.property.match(/^--/)) {
                     let isMediaDark = checkIsDarkRule(this.atrule), isRootTag = checkIsRootTag(this.rule.prelude, options), isSingle = checkIsSingleRoot(this.rule.prelude, options);
                     // 是黑暗模式的变量
                     if (isMediaDark && isRootTag) {

@@ -59,12 +59,12 @@ const gulp_convertJson_1 = __importDefault(require("./gulp.convertJson"));
 const util_1 = __importDefault(require("../shared/util"));
 const buildDir = util_1.default.buildDir;
 const rootDir = util_1.default.rootDir;
-const doraConfig = fs.existsSync(path.join(buildDir, 'dora.config.js')) ?
-    path.join(buildDir, 'dora.config.js') :
-    path.join(rootDir, 'dora.config.js');
-const tsconfig = fs.existsSync(path.join(buildDir, 'tsconfig.json')) ?
-    path.join(buildDir, 'tsconfig.json') :
-    path.join(rootDir, 'tsconfig.json');
+const doraConfig = fs.existsSync(path.join(buildDir, 'dora.config.js'))
+    ? path.join(buildDir, 'dora.config.js')
+    : path.join(rootDir, 'dora.config.js');
+const tsconfig = fs.existsSync(path.join(buildDir, 'tsconfig.json'))
+    ? path.join(buildDir, 'tsconfig.json')
+    : path.join(rootDir, 'tsconfig.json');
 const tsProject = gulp_typescript_1.default.createProject(tsconfig, {
     typescript: require('typescript'),
 });
@@ -72,33 +72,18 @@ const config = Object.assign({
     entry: ['./src/**/*.ts'],
     outputDir: './miniprogram_dist',
     copyPlugin: {
-        entry: [
-            './src/**/*.json',
-            './src/**/*.wxml',
-            './src/**/*.wxss',
-            '!./src/**/*.ts',
-        ],
+        entry: ['./src/**/*.json', './src/**/*.wxml', './src/**/*.wxss', '!./src/**/*.ts'],
     },
     cssPlugin: {
-        entry: [
-            './src/**/*.less',
-        ],
+        entry: ['./src/**/*.less'],
         pxTransform: {
             designWidth: 375,
         },
     },
 }, fs.existsSync(doraConfig) ? require(doraConfig) : {});
-const copy = (paths) => () => (gulp_1.default
-    .src(paths.entry)
-    .pipe((0, gulp_convertJson_1.default)())
-    .pipe(gulp_1.default.dest(paths.outputDir)));
-const scripts = (paths) => () => (gulp_1.default
-    .src(paths.entry)
-    .pipe(tsProject())
-    .js
-    .pipe((0, gulp_banner_1.default)(util_1.default.banner()))
-    .pipe(gulp_1.default.dest(paths.outputDir)));
-const styles = (paths) => () => (gulp_1.default
+const copy = (paths) => () => gulp_1.default.src(paths.entry).pipe((0, gulp_convertJson_1.default)()).pipe(gulp_1.default.dest(paths.outputDir));
+const scripts = (paths) => () => gulp_1.default.src(paths.entry).pipe(tsProject()).js.pipe((0, gulp_banner_1.default)(util_1.default.banner())).pipe(gulp_1.default.dest(paths.outputDir));
+const styles = (paths) => () => gulp_1.default
     .src(paths.entry)
     // .pipe(sourcemaps.init())
     .pipe((0, gulp_less_1.default)({
@@ -111,7 +96,7 @@ const styles = (paths) => () => (gulp_1.default
     .pipe((0, gulp_injectCSS_1.default)())
     // .pipe(sourcemaps.write())
     .pipe((0, gulp_rename_1.default)({ extname: '.wxss' }))
-    .pipe(gulp_1.default.dest(paths.outputDir)));
+    .pipe(gulp_1.default.dest(paths.outputDir));
 const watch = () => {
     gulp_1.default.watch(config.copyPlugin.entry, copy({ entry: config.copyPlugin.entry, outputDir: config.outputDir }));
     gulp_1.default.watch(config.entry, scripts({ entry: config.entry, outputDir: config.outputDir }));
@@ -126,26 +111,26 @@ gulp_1.default.task('watch', watch);
 function logEvents(gulpInst, onListening) {
     const loggedErrors = [];
     gulpInst.on('start', async function (evt) {
-        onListening && await onListening('start');
+        onListening && (await onListening('start'));
         /* istanbul ignore next */
         // TODO: batch these
         // so when 5 tasks start at once it only logs one time with all 5
         const level = evt.branch ? 'debug' : 'info';
-        console[level]('Starting', '\'' + ansi_1.default.cyan(evt.name) + '\'...');
+        console[level]('Starting', "'" + ansi_1.default.cyan(evt.name) + "'...");
     });
     gulpInst.on('stop', async function (evt) {
-        onListening && await onListening('stop');
+        onListening && (await onListening('stop'));
         const time = (0, pretty_hrtime_1.default)(evt.duration);
         /* istanbul ignore next */
         const level = evt.branch ? 'debug' : 'info';
-        console[level]('Finished', '\'' + ansi_1.default.cyan(evt.name) + '\'', 'after', ansi_1.default.magenta(time));
+        console[level]('Finished', "'" + ansi_1.default.cyan(evt.name) + "'", 'after', ansi_1.default.magenta(time));
     });
     gulpInst.on('error', async function (evt) {
-        onListening && await onListening('error');
+        onListening && (await onListening('error'));
         const msg = (0, format_error_1.default)(evt);
         const time = (0, pretty_hrtime_1.default)(evt.duration);
         const level = evt.branch ? 'debug' : 'error';
-        console[level]('\'' + ansi_1.default.cyan(evt.name) + '\'', ansi_1.default.red('errored after'), ansi_1.default.magenta(time));
+        console[level]("'" + ansi_1.default.cyan(evt.name) + "'", ansi_1.default.red('errored after'), ansi_1.default.magenta(time));
         // If we haven't logged this before, log it and add to list
         if (loggedErrors.indexOf(evt.error) === -1) {
             console.error(msg);

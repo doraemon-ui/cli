@@ -11,7 +11,7 @@ const service = new __1.Service(process.env.DORA_CLI_CONTEXT || process.cwd());
 const rawArgv = process.argv.slice(2);
 const args = (0, minimist_1.default)(rawArgv);
 const command = args._[0];
-service.run(command, args, rawArgv).catch(err => {
+service.run(command, args, rawArgv).catch((err) => {
     (0, error_1.error)(err);
     process.exit(1);
 });

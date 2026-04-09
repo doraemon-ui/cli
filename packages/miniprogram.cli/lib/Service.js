@@ -216,13 +216,7 @@ class Service {
             id: id.replace(/^.\//, 'built-in:'),
             apply: require(id),
         });
-        const builtInPlugins = [
-            './commands/build',
-            './commands/create',
-            './commands/help',
-            './commands/install',
-            './commands/serve',
-        ].map(idToPlugin);
+        const builtInPlugins = ['./commands/build', './commands/create', './commands/help', './commands/install', './commands/serve'].map(idToPlugin);
         return builtInPlugins;
     }
     /**
@@ -234,8 +228,7 @@ class Service {
     loadUserOptions() {
         // dora.config.js
         let fileConfig = null, resolved;
-        const configPath = (process.env.DORA_CLI_CONFIG_PATH ||
-            path.resolve(this.context, 'dora.config.js'));
+        const configPath = process.env.DORA_CLI_CONFIG_PATH || path.resolve(this.context, 'dora.config.js');
         if (fs.existsSync(configPath)) {
             try {
                 fileConfig = require(configPath);

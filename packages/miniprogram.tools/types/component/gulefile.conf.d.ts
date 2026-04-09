@@ -4,7 +4,7 @@
  * @param {GulpConfig} [opts={}]
  */
 declare function gulp4Build(opts?: GulpConfig): void;
-export { gulp4Build, };
+export { gulp4Build };
 /**
  * 构建配置
  *
