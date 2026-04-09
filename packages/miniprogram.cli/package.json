@@ -25,7 +25,7 @@
     "preversion": "npm run build"
   },
   "dependencies": {
-    "@doraemon-ui/miniprogram.tools": "^0.0.2-alpha.23",
+    "@doraemon-ui/miniprogram.tools": "workspace:*",
     "@types/minimist": "^1.2.5",
     "axios": "^1.15.0",
     "chalk": "^4.1.2",
