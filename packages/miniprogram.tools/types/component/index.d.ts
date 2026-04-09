@@ -1,1 +1,1 @@
-export * from "./rollup.conf";
+export * from './rollup.conf';
