@@ -30,7 +30,7 @@
     "micromatch": "^4.0.8",
     "miniprogram-api-typings": "^5.1.2",
     "miniprogram-simulate": "^1.6.1",
-    "pnpm": "^7.11.0",
+    "pnpm": "^10.33.0",
     "postcss-less": "^6.0.0",
     "prettier": "^3.8.1",
     "stylelint": "^17.6.0",
