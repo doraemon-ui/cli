@@ -44,8 +44,8 @@ yarn add {{packageName}}
 
 ### DemoComponent props
 
-| 参数 | 类型 | 描述 | 默认值 |
-| --- | --- | --- | --- |
+| 参数      | 类型     | 描述           | 默认值              |
+| --------- | -------- | -------------- | ------------------- |
 | prefixCls | `string` | 自定义类名前缀 | dora-demo-component |
 
 ### DemoComponent slot
@@ -56,12 +56,12 @@ yarn add {{packageName}}
 
 ### DemoComponent externalClasses
 
-| 名称 | 描述 |
-| --- | --- |
+| 名称       | 描述         |
+| ---------- | ------------ |
 | dora-class | 根节点样式类 |
 
 ## CSS Variables
 
-| 属性 | 描述 | 默认值 | 全局变量 |
-| --- | --- | --- | --- |
-| --text-color | 文字颜色 | `#fff` | - |
+| 属性         | 描述     | 默认值 | 全局变量 |
+| ------------ | -------- | ------ | -------- |
+| --text-color | 文字颜色 | `#fff` | -        |

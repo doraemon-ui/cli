@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { DevServer } from '../../options';
 /**
  * miniprogram ci
@@ -34,7 +35,7 @@ export declare class MiniprogramServer {
      * @returns
      * @memberof MiniprogramServer
      */
-    open(project?: string): Promise<import("axios").AxiosResponse<any>>;
+    open(project?: string): Promise<axios.AxiosResponse<any, any, {}>>;
     /**
      * 构建 npm
      *
@@ -42,5 +43,5 @@ export declare class MiniprogramServer {
      * @returns
      * @memberof MiniprogramServer
      */
-    buildnpm(project?: string): Promise<import("axios").AxiosResponse<any>>;
+    buildnpm(project?: string): Promise<axios.AxiosResponse<any, any, {}>>;
 }

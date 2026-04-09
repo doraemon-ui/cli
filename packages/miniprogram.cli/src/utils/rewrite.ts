@@ -1,7 +1,7 @@
 import * as path from 'path'
 import * as fs from 'fs'
 
-export function writeFile (filename: string, content: string): Promise<any> {
+export function writeFile(filename: string, content: string): Promise<any> {
   return new Promise((resolve, reject) => {
     fs.writeFile(filename, content, 'utf-8', (err) => {
       if (err) {
@@ -13,7 +13,7 @@ export function writeFile (filename: string, content: string): Promise<any> {
   })
 }
 
-export function rewrite ({
+export function rewrite({
   filePath,
   fileName,
   transformData,

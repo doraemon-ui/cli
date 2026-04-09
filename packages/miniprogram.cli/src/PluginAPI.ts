@@ -32,7 +32,7 @@ export class PluginAPI {
    * @param {Service} service A CLI instance.
    * @memberof PluginAPI
    */
-  constructor (id: string, service: Service) {
+  constructor(id: string, service: Service) {
     this.id = id
     this.service = service
   }
@@ -43,7 +43,7 @@ export class PluginAPI {
    * @readonly
    * @memberof PluginAPI
    */
-  get version () {
+  get version() {
     return version
   }
 
@@ -53,7 +53,7 @@ export class PluginAPI {
    * @returns
    * @memberof PluginAPI
    */
-  getCwd () {
+  getCwd() {
     return this.service.context
   }
 
@@ -64,7 +64,7 @@ export class PluginAPI {
    * @returns
    * @memberof PluginAPI
    */
-  resolve (_path: string) {
+  resolve(_path: string) {
     return path.resolve(this.service.context, _path)
   }
 
@@ -75,8 +75,8 @@ export class PluginAPI {
    * @returns
    * @memberof PluginAPI
    */
-  hasPlugin (id: string) {
-    return this.service.plugins.some(p => id === p.id)
+  hasPlugin(id: string) {
+    return this.service.plugins.some((p) => id === p.id)
   }
 
   /**
@@ -87,11 +87,11 @@ export class PluginAPI {
    * @param {ServiceCommandFn} [fn]
    * @memberof PluginAPI
    */
-  registerCommand (name: string, opts: ServiceCommandOpts | ServiceCommandFn | null, fn?: ServiceCommandFn) {
+  registerCommand(name: string, opts: ServiceCommandOpts | ServiceCommandFn | null, fn?: ServiceCommandFn) {
     if (typeof opts === 'function') {
       fn = opts
       opts = null
     }
-    this.service.commands[name] = { fn: fn as ServiceCommandFn, opts: opts as ServiceCommandOpts || {}}
+    this.service.commands[name] = { fn: fn as ServiceCommandFn, opts: (opts as ServiceCommandOpts) || {} }
   }
 }

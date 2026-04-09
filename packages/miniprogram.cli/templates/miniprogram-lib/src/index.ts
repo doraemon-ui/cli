@@ -1,3 +1,3 @@
-export default function DemoLib () {
+export default function DemoLib() {
   return 'demo-lib'
 }

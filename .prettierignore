@@ -1,0 +1,15 @@
+.eslintrc
+.npmrc
+.git
+.github
+.*.js
+babel.config.js
+lerna.json
+.coverage-report
+types
+lib
+dist
+example/dist
+miniprogram_dist
+node_modules
+.husky/

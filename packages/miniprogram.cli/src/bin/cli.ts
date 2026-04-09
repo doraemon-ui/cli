@@ -11,7 +11,7 @@ const args = minimist(rawArgv)
 
 const command = args._[0]
 
-service.run(command, args, rawArgv).catch(err => {
+service.run(command, args, rawArgv).catch((err) => {
   error(err)
   process.exit(1)
 })

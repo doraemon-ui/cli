@@ -1,7 +1,7 @@
 import axios from 'axios'
 import chalk from 'chalk'
 
-export async function checkVersion () {
+export async function checkVersion() {
   const packageJson = require('../../package.json')
   const currentVersion = packageJson.version || ''
   const packageName = packageJson.name || ''

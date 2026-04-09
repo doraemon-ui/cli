@@ -8,10 +8,4 @@ const templatesDir = path.resolve(__dirname, '../../templates')
 const IS_WIN32 = process.platform === 'win32'
 const USE_NPX = commandExists.sync('npx')
 
-export {
-  cwd,
-  root,
-  templatesDir,
-  IS_WIN32,
-  USE_NPX,
-}
+export { cwd, root, templatesDir, IS_WIN32, USE_NPX }

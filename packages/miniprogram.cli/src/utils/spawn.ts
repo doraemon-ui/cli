@@ -5,7 +5,7 @@ import * as childProcess from 'child_process'
  *
  * @param {ISpawnParam} param
  */
-function spawn (param: ISpawnParam) {
+function spawn(param: ISpawnParam) {
   const options = param.options || {}
   let exec: childProcess.ChildProcess
 
@@ -32,14 +32,12 @@ function spawn (param: ISpawnParam) {
     typeof param.onClose === 'function' && param.onClose(code)
   })
 
-  exec.on('error', error => {
+  exec.on('error', (error) => {
     typeof param.onError === 'function' && param.onError(error)
   })
 }
 
-export {
-  spawn,
-}
+export { spawn }
 
 interface ISpawnParam {
   command: string

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.runNpmCommand = void 0;
+exports.runNpmCommand = runNpmCommand;
 const chalk_1 = __importDefault(require("chalk"));
 const spawn_1 = require("./spawn");
 const config_1 = require("../config");
@@ -37,4 +37,3 @@ function runNpmCommand(args = [], onStartMsg = '', onCloseMsg = '') {
         });
     });
 }
-exports.runNpmCommand = runNpmCommand;

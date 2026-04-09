@@ -5,15 +5,15 @@
     "module": "commonjs",
     "allowJs": false,
     "outDir": "./lib",
+    "rootDir": "./src",
     "strict": false,
     "noImplicitAny": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "types": ["node"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "newLine": "lf",
-    "lib": [
-      "es2015"
-    ],
+    "lib": ["es2015", "es5"],
     "skipLibCheck": true
   },
   "compileOnSave": false,

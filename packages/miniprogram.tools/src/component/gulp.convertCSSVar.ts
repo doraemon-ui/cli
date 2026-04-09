@@ -16,7 +16,6 @@ const PLUGIN_NAME = 'gulp-convert-css-var'
 //颜色map
 let colorMap = {}
 
-
 //检查是否在媒体查询中有dark mode
 function checkIsDarkRule(ast) {
   let isDark = false
@@ -70,7 +69,6 @@ function gulpProfixer(opts) {
 
   //创建一个 stream 通道，让每个文件通过
   let stream = through2.obj(function (file, enc, cb) {
-
     //不支持stream
     if (file.isStream()) {
       this.emit('error', new PluginError(PLUGIN_NAME, 'It does not support stream for now, contact the developers for further support.'))
@@ -84,19 +82,14 @@ function gulpProfixer(opts) {
       visit: 'Declaration',
       enter(node) {
         //找出变量定义的规则
-        if (
-          node.property &&
-          node.property.match(/^--/)
-        ) {
+        if (node.property && node.property.match(/^--/)) {
           let isMediaDark = checkIsDarkRule(this.atrule),
             isRootTag = checkIsRootTag(this.rule.prelude, options),
             isSingle = checkIsSingleRoot(this.rule.prelude, options)
 
-
           // 是黑暗模式的变量
           if (isMediaDark && isRootTag) {
             colorMap[`${node.property}_dark`] = node.value
-
           }
           // 是默认模式的变量
           else if (!isMediaDark && isSingle) {
@@ -105,7 +98,6 @@ function gulpProfixer(opts) {
         }
       },
     })
-
 
     // 给所有通过变量赋值的颜色多加一个保底的颜色
     csstree.walk(ast, function (pnode, item, list) {
@@ -147,13 +139,14 @@ function gulpProfixer(opts) {
       }
     })
 
-
     let css = csstree.generate(ast)
-    let bu = Buffer.from(cssbeautify(css, {
-      indent: '  ',
-      openbrace: 'end-of-line',
-      autosemicolon: true,
-    }))
+    let bu = Buffer.from(
+      cssbeautify(css, {
+        indent: '  ',
+        openbrace: 'end-of-line',
+        autosemicolon: true,
+      }),
+    )
     file.contents = bu
 
     // 给下一个插件提供文件

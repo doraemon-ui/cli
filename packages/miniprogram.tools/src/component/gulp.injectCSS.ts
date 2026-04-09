@@ -8,19 +8,16 @@ const injectCSS = () => {
   const replace = (str = '') => {
     let startTag: RegExpMatchArray | null = str.match(INJECT_REG)
     let endTag: RegExpMatchArray | null = str.match(END_INJECT_REG)
-    while(startTag && endTag) {
+    while (startTag && endTag) {
       const transformedContents = str.slice(startTag[0].length + (startTag.index || 0), endTag.index)
-      str = str.replace(startTag[0], '')
-        .replace(transformedContents, `@import '${startTag[1]}';\n`)
-        .replace(endTag[0], '')
+      str = str.replace(startTag[0], '').replace(transformedContents, `@import '${startTag[1]}';\n`).replace(endTag[0], '')
       startTag = str.match(INJECT_REG)
       endTag = str.match(END_INJECT_REG)
     }
     return str
   }
 
-  return through2.obj(function(file, encoding, cb) {
-
+  return through2.obj(function (file, encoding, cb) {
     // 如果文件为空，不做任何操作，转入下一个操作，即下一个pipe
     if (file.isNull()) {
       this.push(file)

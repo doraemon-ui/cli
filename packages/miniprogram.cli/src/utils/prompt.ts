@@ -11,7 +11,7 @@ const prompt = inquirer.createPromptModule()
 export enum ComponentType {
   MiniprogramLib = 'miniprogram-lib',
   MiniprogramComponent = 'miniprogram-component',
-  MiniprogramComponentSnippet = 'miniprogram-component-snippet'
+  MiniprogramComponentSnippet = 'miniprogram-component-snippet',
 }
 
 /**
@@ -20,7 +20,7 @@ export enum ComponentType {
  * @export
  * @returns {Promise<ComponentType>}
  */
-export async function getComponentType (): Promise<ComponentType> {
+export async function getComponentType(): Promise<ComponentType> {
   return prompt<any>({
     name: 'componentType',
     type: 'list',
@@ -39,7 +39,7 @@ export async function getComponentType (): Promise<ComponentType> {
         value: ComponentType.MiniprogramComponentSnippet,
       },
     ],
-  }).then(answer => {
+  }).then((answer) => {
     return answer.componentType
   })
 }
@@ -51,7 +51,7 @@ export async function getComponentType (): Promise<ComponentType> {
  * @enum {number}
  */
 export enum NpmScope {
-  UI = '@doraemon-ui'
+  UI = '@doraemon-ui',
 }
 
 /**
@@ -60,7 +60,7 @@ export enum NpmScope {
  * @export
  * @returns {Promise<NpmScope>}
  */
-export async function getNpmScope (): Promise<NpmScope> {
+export async function getNpmScope(): Promise<NpmScope> {
   let scope = await prompt({
     name: 'npmScope',
     type: 'list',
@@ -70,7 +70,7 @@ export async function getNpmScope (): Promise<NpmScope> {
       // new inquirer.Separator(),
       // 'others'
     ],
-  }).then(answer => answer.npmScope)
+  }).then((answer) => answer.npmScope)
 
   // if (scope === 'others') {
   //   scope = await prompt({

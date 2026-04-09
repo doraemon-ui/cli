@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = help;
 const chalk_1 = __importDefault(require("chalk"));
 const string_prototype_padend_1 = __importDefault(require("string.prototype.padend"));
 const getPadLength_1 = require("../utils/getPadLength");
@@ -53,4 +54,3 @@ function help(api, options) {
         }
     }
 }
-exports.default = help;

@@ -8,10 +8,10 @@ const lerna = IS_WIN32 ? 'lerna.cmd' : 'lerna'
 /**
  * 执行 lerna 指令
  * @param args lerna 命令参数
- * @param onStartMsg 
- * @param onCloseMsg 
+ * @param onStartMsg
+ * @param onCloseMsg
  */
-export function runLernaCommand (args: string[] = [], onStartMsg = '', onCloseMsg = ''): Promise<void> {
+export function runLernaCommand(args: string[] = [], onStartMsg = '', onCloseMsg = ''): Promise<void> {
   let command = lerna
 
   // 如果装有 npx 则使用 npx 执行
@@ -20,10 +20,7 @@ export function runLernaCommand (args: string[] = [], onStartMsg = '', onCloseMs
     command = IS_WIN32 ? 'npx.cmd' : 'npx'
   }
 
-  console.log(
-    chalk.gray('Running '),
-    chalk.inverse(`${command} ${args.join(' ')}`)
-  )
+  console.log(chalk.gray('Running '), chalk.inverse(`${command} ${args.join(' ')}`))
   console.log(chalk.green(onStartMsg))
 
   return new Promise((resolve, reject) => {
@@ -34,11 +31,11 @@ export function runLernaCommand (args: string[] = [], onStartMsg = '', onCloseMs
       options: {
         cwd: root,
       },
-      onError (err) {
+      onError(err) {
         console.log(chalk.red(err.message))
         reject(err)
       },
-      onClose () {
+      onClose() {
         console.log(chalk.green(onCloseMsg))
         resolve()
       },
@@ -49,7 +46,7 @@ export function runLernaCommand (args: string[] = [], onStartMsg = '', onCloseMs
 /**
  * 获取 lerna 配置信息
  */
-export function getLernaConfig () {
+export function getLernaConfig() {
   const lernaConfig = require(path.resolve(root, 'lerna.json'))
   return lernaConfig || {}
 }

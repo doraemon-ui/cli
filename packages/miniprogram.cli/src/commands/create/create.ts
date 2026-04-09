@@ -17,21 +17,22 @@ type PkgFn<T = PackageJson> = (pkg: Partial<T>) => Partial<T | { keywords?: stri
  * @param {string} [split='-']
  * @returns
  */
-function toUpperCase (str: string, split: string = '-') {
+function toUpperCase(str: string, split: string = '-') {
   return str.split(split).reduce((acc, name) => {
-    return acc += `${name.charAt(0).toUpperCase()}${name.slice(1)}`
+    acc += `${name.charAt(0).toUpperCase()}${name.slice(1)}`
+    return acc
   }, '')
 }
 
-function renderJSON<T = any> (content: object, getData: PkgFn<T>) {
+function renderJSON<T = any>(content: object, getData: PkgFn<T>) {
   const data = getData.call(null, { ...content })
   for (let key in data) {
     content[key] = data[key]
   }
-  return JSON.stringify(content, null ,2)
+  return JSON.stringify(content, null, 2)
 }
 
-function renderFile (content: string, packageName: string = '', componentNameShort: string = '') {
+function renderFile(content: string, packageName: string = '', componentNameShort: string = '') {
   return content
     .replace(/{{packageName}}/g, packageName)
     .replace(/DemoComponent/g, toUpperCase(componentNameShort))
@@ -40,37 +41,37 @@ function renderFile (content: string, packageName: string = '', componentNameSho
     .replace(/demo-lib/g, componentNameShort)
 }
 
-function rewritePackageJSON (componentPath: string, getData: PkgFn) {
+function rewritePackageJSON(componentPath: string, getData: PkgFn) {
   return rewrite({
     filePath: componentPath,
     fileName: 'package.json',
-    transformData (data) {
+    transformData(data) {
       return renderJSON(data, getData)
     },
   })
 }
 
-function rewriteTypeDeclare (componentPath: string, packageName: string, componentNameShort: string) {
+function rewriteTypeDeclare(componentPath: string, packageName: string, componentNameShort: string) {
   return rewrite({
     filePath: componentPath,
     fileName: 'index.d.ts',
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, packageName, componentNameShort)
     },
   })
 }
 
-function rewriteReadme (componentPath: string, packageName: string, componentNameShort: string) {
+function rewriteReadme(componentPath: string, packageName: string, componentNameShort: string) {
   return rewrite({
     filePath: componentPath,
     fileName: 'README.md',
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, packageName, componentNameShort)
     },
   })
 }
 
-async function rewriteDemo (rootName: string, author: string, packageJSON: PackageJson, cwd: string) {
+async function rewriteDemo(rootName: string, author: string, packageJSON: PackageJson, cwd: string) {
   const distDir = path.join(cwd, rootName, 'playground')
   const packageName = packageJSON.name
   const packageVer = packageJSON.version
@@ -80,7 +81,7 @@ async function rewriteDemo (rootName: string, author: string, packageJSON: Packa
   await rewrite({
     filePath: distDir,
     fileName: 'project.config.json',
-    transformData (data) {
+    transformData(data) {
       return renderJSON(data, () => ({
         projectname: componentName,
       }))
@@ -89,7 +90,7 @@ async function rewriteDemo (rootName: string, author: string, packageJSON: Packa
   await rewrite({
     filePath: distDir,
     fileName: 'project.private.config.json',
-    transformData (data) {
+    transformData(data) {
       return renderJSON(data, () => ({
         projectname: componentName,
       }))
@@ -110,7 +111,7 @@ async function rewriteDemo (rootName: string, author: string, packageJSON: Packa
   await rewrite({
     filePath: path.join(distDir, 'pages/index'),
     fileName: 'index.json',
-    transformData (data) {
+    transformData(data) {
       return renderJSON(data, (componentJson) => ({
         navigationBarTitleText: componentName,
         usingComponents: {
@@ -123,8 +124,9 @@ async function rewriteDemo (rootName: string, author: string, packageJSON: Packa
   await rewrite({
     filePath: path.join(distDir, 'pages/index'),
     fileName: 'index.wxml',
-    transformData (data) {
-      return data.replace(/{{componentName}}/g, componentName)
+    transformData(data) {
+      return data
+        .replace(/{{componentName}}/g, componentName)
         .replace(/{{componentFragment}}/g, `<dora-${componentNameShort}>${componentName}</dora-${componentNameShort}>`)
     },
   })
@@ -140,22 +142,22 @@ async function rewriteDemo (rootName: string, author: string, packageJSON: Packa
  * @param {NpmScope} npmScope 组件所属的 npm 域
  * @returns
  */
-export async function create (cwd: string, name: string, componentType: ComponentType, npmScope: NpmScope) {
+export async function create(cwd: string, name: string, componentType: ComponentType, npmScope: NpmScope) {
   if (!name) {
     return Promise.reject('缺少 name 参数')
   }
 
-  const type = componentType || await getComponentType()
+  const type = componentType || (await getComponentType())
   switch (type) {
-      case ComponentType.MiniprogramLib:
-        createLib(cwd, name, type, npmScope)
-        break
-      case ComponentType.MiniprogramComponent:
-        createComponent(cwd, name, type, npmScope)
-        break
-      case ComponentType.MiniprogramComponentSnippet:
-        createComponentSnippet(cwd, name, type)
-        break
+    case ComponentType.MiniprogramLib:
+      createLib(cwd, name, type, npmScope)
+      break
+    case ComponentType.MiniprogramComponent:
+      createComponent(cwd, name, type, npmScope)
+      break
+    case ComponentType.MiniprogramComponentSnippet:
+      createComponentSnippet(cwd, name, type)
+      break
   }
 }
 
@@ -168,12 +170,12 @@ export async function create (cwd: string, name: string, componentType: Componen
  * @param {NpmScope} npmScope 组件所属的 npm 域
  * @returns
  */
-async function createComponent (cwd: string, name: string, type: ComponentType, npmScope: NpmScope) {
+async function createComponent(cwd: string, name: string, type: ComponentType, npmScope: NpmScope) {
   if (!name) {
     return Promise.reject('缺少 name 参数')
   }
 
-  const scope = npmScope || await getNpmScope()
+  const scope = npmScope || (await getNpmScope())
   const author: string = gitUsername()
 
   const template = path.join(templatesDir, type)
@@ -194,28 +196,28 @@ async function createComponent (cwd: string, name: string, type: ComponentType, 
   await rewrite({
     filePath: path.join(distDir, 'src'),
     fileName: 'index.ts',
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, packageName, componentNameShort)
     },
   })
   await rewrite({
     filePath: path.join(distDir, '__tests__'),
     fileName: 'index.spec.ts',
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, packageName, componentNameShort)
     },
   })
   await rewrite({
     filePath: path.join(distDir, 'assets'),
     fileName: 'variables.less',
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, packageName, componentNameShort)
     },
   })
   await rewrite({
     filePath: path.join(distDir, 'assets'),
     fileName: 'index.less',
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, packageName, componentNameShort)
     },
   })
@@ -231,7 +233,7 @@ async function createComponent (cwd: string, name: string, type: ComponentType, 
  * @param {ComponentType} type 组件模板
  * @returns
  */
-async function createComponentSnippet (cwd: string, name: string, type: ComponentType) {
+async function createComponentSnippet(cwd: string, name: string, type: ComponentType) {
   if (!name) {
     return Promise.reject('缺少 name 参数')
   }
@@ -239,7 +241,7 @@ async function createComponentSnippet (cwd: string, name: string, type: Componen
   const template = path.join(templatesDir, type)
   const distDir = path.join(cwd)
   await copyFolder(template, distDir, {
-    rename (target: string) {
+    rename(target: string) {
       const reg = /index(.\w+)$/
       const match = target.match(reg)
       return match ? target.replace(reg, `${name}${match[1]}`) : target
@@ -248,7 +250,7 @@ async function createComponentSnippet (cwd: string, name: string, type: Componen
   await rewrite({
     filePath: distDir,
     fileName: `${name}.ts`,
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, '', name)
     },
   })
@@ -264,12 +266,12 @@ async function createComponentSnippet (cwd: string, name: string, type: Componen
  * @param {NpmScope} npmScope 库所属的 npm 域
  * @returns
  */
-async function createLib (cwd: string, name: string, type: ComponentType, npmScope: NpmScope) {
+async function createLib(cwd: string, name: string, type: ComponentType, npmScope: NpmScope) {
   if (!name) {
     return Promise.reject('缺少 name 参数')
   }
 
-  const scope = npmScope || await getNpmScope()
+  const scope = npmScope || (await getNpmScope())
   const author = gitUsername()
 
   const template = path.join(templatesDir, type)
@@ -290,14 +292,14 @@ async function createLib (cwd: string, name: string, type: ComponentType, npmSco
   await rewrite({
     filePath: path.join(distDir, 'src'),
     fileName: 'index.ts',
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, packageName, componentNameShort)
     },
   })
   await rewrite({
     filePath: path.join(distDir, '__tests__'),
     fileName: 'index.spec.ts',
-    transformData (data) {
+    transformData(data) {
       return renderFile(data, packageName, componentNameShort)
     },
   })

@@ -4,19 +4,23 @@ import { PluginAPI } from '../PluginAPI'
 import { Options } from '../options'
 import { runLernaCommand } from '../utils/lerna'
 
-export default function install (api: PluginAPI, options: Options) {
-  api.registerCommand('install', {
-    description: 'Install a single dependency to matched packages',
-    usage: 'install [packageName]',
-    options: {
-      '--dev': 'Save to devDependencies',
+export default function install(api: PluginAPI, options: Options) {
+  api.registerCommand(
+    'install',
+    {
+      description: 'Install a single dependency to matched packages',
+      usage: 'install [packageName]',
+      options: {
+        '--dev': 'Save to devDependencies',
+      },
     },
-  }, async (args, rawArgs) => {
-    await installPackage(api.getCwd(), args._[0], args.dev)
-  })
+    async (args, rawArgs) => {
+      await installPackage(api.getCwd(), args._[0], args.dev)
+    },
+  )
 }
 
-export async function installPackage (to: string, packageName: string, dev: boolean = false) {
+export async function installPackage(to: string, packageName: string, dev: boolean = false) {
   const packageJSONPath = path.join(to, 'package.json')
   if (!fs.existsSync(packageJSONPath)) {
     return Promise.reject('当前目录找不到 package.json 文件')
@@ -37,15 +41,8 @@ export async function installPackage (to: string, packageName: string, dev: bool
  * 执行 lerna bootstrap
  * 安装 package.json 中的依赖
  */
-async function installPackageDependencies (scope: string) {
-  await runLernaCommand(
-    [
-      'bootstrap',
-      `--scope=${scope}`,
-    ],
-    `正在安装 ${scope} 的依赖`,
-    '安装完成惹'
-  )
+async function installPackageDependencies(scope: string) {
+  await runLernaCommand(['bootstrap', `--scope=${scope}`], `正在安装 ${scope} 的依赖`, '安装完成惹')
 }
 
 /**
@@ -53,17 +50,13 @@ async function installPackageDependencies (scope: string) {
  * 安装特定依赖
  * @param packageName 要安装的包名
  */
-async function addPackage (packageName: string, dev: boolean, scope: string) {
+async function addPackage(packageName: string, dev: boolean, scope: string) {
   if (!packageName) {
     return
   }
   await runLernaCommand(
-    [
-      'add',
-      packageName,
-      `--scope=${scope}`,
-    ].concat(dev ? ['--dev'] : []),
+    ['add', packageName, `--scope=${scope}`].concat(dev ? ['--dev'] : []),
     `正在安装 ${packageName} 到当前目录`,
-    '安装完成惹'
+    '安装完成惹',
   )
 }

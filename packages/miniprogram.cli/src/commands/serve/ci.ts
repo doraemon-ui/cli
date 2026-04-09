@@ -30,7 +30,7 @@ export class MiniprogramServer {
    * @param {DevServer} devServer
    * @memberof MiniprogramServer
    */
-  constructor (devServer: DevServer) {
+  constructor(devServer: DevServer) {
     const protocol = devServer.https ? 'https' : 'http'
     this.project = devServer.entry as string
     this.publicUrl = `${protocol}://${devServer.host}:${devServer.port}/v2`
@@ -43,7 +43,7 @@ export class MiniprogramServer {
    * @returns
    * @memberof MiniprogramServer
    */
-  public open (project: string = this.project) {
+  public open(project: string = this.project) {
     return axios.get(`${this.publicUrl}/open`, {
       params: {
         project,
@@ -58,7 +58,7 @@ export class MiniprogramServer {
    * @returns
    * @memberof MiniprogramServer
    */
-  public buildnpm (project: string = this.project) {
+  public buildnpm(project: string = this.project) {
     return axios.get(`${this.publicUrl}/buildnpm`, {
       params: {
         project,

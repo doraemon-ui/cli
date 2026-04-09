@@ -14,7 +14,7 @@ const indexConfig = getRollupConfig({
   copy: true,
 })
 
-async function buildAll () {
+async function buildAll() {
   await startBuild(indexConfig)
 }
 

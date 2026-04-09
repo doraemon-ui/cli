@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = create;
 const prompt_1 = require("../../utils/prompt");
 function create(api, options) {
     api.registerCommand('create', {
@@ -14,4 +15,3 @@ function create(api, options) {
         return require('./create').create(api.getCwd(), args._[0], type, npmScope);
     });
 }
-exports.default = create;

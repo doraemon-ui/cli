@@ -36,7 +36,7 @@ class DemoComponent extends Doraemon {
   })
   wrapStyle: Partial<CSSStyleDeclaration>
 
-  get classes () {
+  get classes() {
     const { prefixCls, hoverClass, disabled } = this
     const wrap = classNames(prefixCls, {
       [`${prefixCls}--disabled`]: disabled,
@@ -49,11 +49,11 @@ class DemoComponent extends Doraemon {
     }
   }
 
-  get containerStyle () {
+  get containerStyle() {
     return this.wrapStyle ? styleToCssString(this.wrapStyle) : ''
   }
 
-  onClick () {
+  onClick() {
     if (!this.disabled) {
       this.$emit('click')
     }

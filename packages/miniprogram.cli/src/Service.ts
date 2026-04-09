@@ -105,12 +105,12 @@ export class Service {
    * @param {string} context
    * @memberof Service
    */
-  constructor (context: string) {
+  constructor(context: string) {
     this.context = context
     this.pkgContext = context
     this.pkg = this.resolvePkg()
     this.plugins = this.resolvePlugins()
-    this.modes = this.plugins.reduce<ServicePluginModes>((modes, { apply: { defaultModes }}) => {
+    this.modes = this.plugins.reduce<ServicePluginModes>((modes, { apply: { defaultModes } }) => {
       return Object.assign(modes, defaultModes)
     }, {})
   }
@@ -121,7 +121,7 @@ export class Service {
    * @param {string} [mode=process.env.DORA_CLI_CONTEXT]
    * @memberof Service
    */
-  private init (mode: string = process.env.DORA_CLI_CONTEXT as string) {
+  private init(mode: string = process.env.DORA_CLI_CONTEXT as string) {
     if (this.initialized) {
       return
     }
@@ -144,7 +144,7 @@ export class Service {
    * @returns
    * @memberof Service
    */
-  public async run (name: string, args: ServiceRunArgs = { _: [] }, rawArgv: string[] = []) {
+  public async run(name: string, args: ServiceRunArgs = { _: [] }, rawArgv: string[] = []) {
     const mode = args.mode || (name === 'build' && args.watch ? 'development' : this.modes[name])
     this.init(mode)
     args._ = args._ || []
@@ -174,7 +174,7 @@ export class Service {
    * @returns
    * @memberof Service
    */
-  private resolvePkg (context: string = this.context): { [key: string]: any } {
+  private resolvePkg(context: string = this.context): { [key: string]: any } {
     const packageJSONPath = path.join(context, 'package.json')
     if (fs.existsSync(packageJSONPath)) {
       const pgk = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'))
@@ -190,18 +190,14 @@ export class Service {
    * @returns
    * @memberof Service
    */
-  private resolvePlugins () {
+  private resolvePlugins() {
     const idToPlugin = (id: string) => ({
       id: id.replace(/^.\//, 'built-in:'),
       apply: require(id),
     })
-    const builtInPlugins = [
-      './commands/build',
-      './commands/create',
-      './commands/help',
-      './commands/install',
-      './commands/serve',
-    ].map(idToPlugin)
+    const builtInPlugins = ['./commands/build', './commands/create', './commands/help', './commands/install', './commands/serve'].map(
+      idToPlugin,
+    )
     return builtInPlugins
   }
 
@@ -211,13 +207,11 @@ export class Service {
    * @returns
    * @memberof Service
    */
-  private loadUserOptions () {
+  private loadUserOptions() {
     // dora.config.js
-    let fileConfig: Options | null = null, resolved: Options
-    const configPath = (
-      process.env.DORA_CLI_CONFIG_PATH ||
-      path.resolve(this.context, 'dora.config.js')
-    )
+    let fileConfig: Options | null = null,
+      resolved: Options
+    const configPath = process.env.DORA_CLI_CONFIG_PATH || path.resolve(this.context, 'dora.config.js')
     if (fs.existsSync(configPath)) {
       try {
         fileConfig = require(configPath)
@@ -227,9 +221,7 @@ export class Service {
         }
 
         if (!fileConfig || typeof fileConfig !== 'object') {
-          error(
-            'Error loading dora.config.js: should export an object or a function that returns object.'
-          )
+          error('Error loading dora.config.js: should export an object or a function that returns object.')
           fileConfig = null
         }
       } catch (e) {
@@ -254,7 +246,7 @@ export class Service {
  */
 export interface ServiceCommand {
   /** 命令对应的函数 */
-  fn: ServiceCommandFn,
+  fn: ServiceCommandFn
   /** 命令对应的参数 */
   opts: ServiceCommandOpts
 }
@@ -304,10 +296,7 @@ export interface ServiceCommandOpts {
  *
  * @export
  */
-export type ServiceCommandFn = (
-  args: ServiceRunArgs,
-  rawArgs: string[]
-) => void | Promise<any>
+export type ServiceCommandFn = (args: ServiceRunArgs, rawArgs: string[]) => void | Promise<any>
 
 /**
  * CLI 服务启动的参数
@@ -336,10 +325,7 @@ export interface ServiceRunArgs extends minimist.ParsedArgs {
  *
  * @export
  */
-export type ServicePlugin = (
-  api: PluginAPI,
-  options: Options
-) => void
+export type ServicePlugin = (api: PluginAPI, options: Options) => void
 
 /**
  * 插件对应的模式

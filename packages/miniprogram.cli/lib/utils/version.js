@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkVersion = void 0;
+exports.checkVersion = checkVersion;
 const axios_1 = __importDefault(require("axios"));
 const chalk_1 = __importDefault(require("chalk"));
 async function checkVersion() {
@@ -31,4 +31,3 @@ async function checkVersion() {
         }
     }
 }
-exports.checkVersion = checkVersion;

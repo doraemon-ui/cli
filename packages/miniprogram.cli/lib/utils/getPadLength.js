@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPadLength = void 0;
+exports.getPadLength = getPadLength;
 function getPadLength(obj) {
     let longest = 10;
     for (const name in obj) {
@@ -10,4 +10,3 @@ function getPadLength(obj) {
     }
     return longest;
 }
-exports.getPadLength = getPadLength;

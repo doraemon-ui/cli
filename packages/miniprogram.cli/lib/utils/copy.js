@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.copyFolder = void 0;
+exports.copyFolder = copyFolder;
 const ncp_1 = __importDefault(require("ncp"));
 function copyFolder(from, to, options = {}) {
     return new Promise((resolve, reject) => {
@@ -17,4 +17,3 @@ function copyFolder(from, to, options = {}) {
         });
     });
 }
-exports.copyFolder = copyFolder;

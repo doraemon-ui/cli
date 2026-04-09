@@ -1,4 +1,3 @@
-/// <reference types="node" />
 /**
  * 以 Spawn 方式运行外部程序.
  *

@@ -40,8 +40,7 @@ const convertJson = () => {
     return str
   }
 
-  return through2.obj(function(file, encoding, cb) {
-
+  return through2.obj(function (file, encoding, cb) {
     // 如果文件为空，不做任何操作，转入下一个操作，即下一个pipe
     if (file.isNull()) {
       this.push(file)
