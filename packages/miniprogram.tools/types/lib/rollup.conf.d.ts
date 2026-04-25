@@ -55,6 +55,5 @@ export interface RollupOutOptions {
     name?: string;
     sourcemap?: boolean;
     banner?: string;
-    exports?: 'default' | 'named' | 'none' | 'auto';
 }
 export {};

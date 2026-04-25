@@ -129,7 +129,6 @@ function rollupConfig(opts = {}) {
         name: options.libraryName,
         sourcemap: rollupConfig.sourceMap,
         banner,
-        exports: 'auto'
     };
     return {
         inputOptions,

@@ -123,7 +123,7 @@ function convertCssVars(css, options = { bodyNode: 'page', rootNode: 'root' }) {
         if (!atrule)
             return false;
         css_tree_1.default.walk(atrule, {
-            visit: 'MediaFeature',
+            visit: 'Feature',
             enter(node) {
                 if (node.name === 'prefers-color-scheme' && node.value && node.value.type === 'Identifier' && node.value.name === 'dark') {
                     isDark = true;
@@ -265,6 +265,18 @@ async function copyAssets() {
         }
     }));
 }
+const getCommonPlugins = () => {
+    return [
+        (0, plugin_node_resolve_1.default)({
+            mainFields: ['module', 'main', 'jsnext:main', 'browser'],
+            extensions,
+        }),
+        (0, plugin_commonjs_1.default)({
+            include: /node_modules/,
+        }),
+        (0, plugin_typescript_1.default)({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+    ];
+};
 async function compileScripts() {
     const patterns = normalizePatterns(config.entry);
     const inputFiles = await (0, fast_glob_1.default)(patterns, { cwd: buildDir, absolute: true });
@@ -273,16 +285,8 @@ async function compileScripts() {
     }
     const bundle = await (0, rollup_1.rollup)({
         input: inputFiles,
-        plugins: [
-            (0, plugin_node_resolve_1.default)({
-                mainFields: ['module', 'main', 'jsnext:main', 'browser'],
-                extensions,
-            }),
-            (0, plugin_commonjs_1.default)({
-                include: /node_modules/,
-            }),
-            (0, plugin_typescript_1.default)({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
-        ],
+        external: [/@doraemon-ui/],
+        plugins: [...getCommonPlugins()],
         onwarn(warning, warn) {
             if (warning.code === 'THIS_IS_UNDEFINED')
                 return;
@@ -298,7 +302,6 @@ async function compileScripts() {
         preserveModulesRoot: path.join(buildDir, 'src'),
         sourcemap: false,
         banner: util_1.default.banner(),
-        exports: 'auto',
     });
     await bundle.close();
 }
@@ -331,15 +334,9 @@ async function createWatcher(opts = {}) {
     const inputFiles = await (0, fast_glob_1.default)(inputPatterns, { cwd: buildDir, absolute: true });
     const watchOptions = {
         input: inputFiles,
+        external: [/@doraemon-ui/],
         plugins: [
-            (0, plugin_node_resolve_1.default)({
-                mainFields: ['module', 'main', 'jsnext:main', 'browser'],
-                extensions,
-            }),
-            (0, plugin_commonjs_1.default)({
-                include: /node_modules/,
-            }),
-            (0, plugin_typescript_1.default)({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+            ...getCommonPlugins(),
             (0, rollup_plugin_copy_1.default)({
                 targets: [
                     {
@@ -357,7 +354,6 @@ async function createWatcher(opts = {}) {
             preserveModulesRoot: path.join(buildDir, 'src'),
             sourcemap: false,
             banner: util_1.default.banner(),
-            exports: 'auto',
         },
         watch: {
             include: [path.join(buildDir, 'src', '**')],
