@@ -17,12 +17,12 @@
     "cli"
   ],
   "scripts": {
-    "dev": "npm run clean && npm run build:dev",
-    "build": "npm run clean && npm run build:lib",
+    "dev": "pnpm clean && pnpm build:dev",
+    "build": "pnpm clean && pnpm build:lib",
     "build:dev": "cross-env tsc -p ./tsconfig.json --watch --incremental",
     "build:lib": "cross-env tsc -p ./tsconfig.json --declaration --declarationDir types",
     "clean": "cross-env rimraf lib/* types/*",
-    "preversion": "npm run build"
+    "preversion": "pnpm build"
   },
   "dependencies": {
     "@doraemon-ui/miniprogram.tools": "workspace:*",
