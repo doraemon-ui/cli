@@ -42,7 +42,7 @@ const fs = __importStar(require("fs"));
 const fast_glob_1 = __importDefault(require("fast-glob"));
 const chokidar_1 = __importDefault(require("chokidar"));
 const rollup_1 = require("rollup");
-const plugin_typescript_1 = __importDefault(require("@rollup/plugin-typescript"));
+const plugin_babel_1 = __importDefault(require("@rollup/plugin-babel"));
 const plugin_commonjs_1 = __importDefault(require("@rollup/plugin-commonjs"));
 const plugin_node_resolve_1 = __importDefault(require("@rollup/plugin-node-resolve"));
 const rollup_plugin_copy_1 = __importDefault(require("rollup-plugin-copy"));
@@ -274,7 +274,23 @@ const getCommonPlugins = () => {
         (0, plugin_commonjs_1.default)({
             include: /node_modules/,
         }),
-        (0, plugin_typescript_1.default)({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+        // typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+        (0, plugin_babel_1.default)({
+            babelHelpers: 'bundled',
+            extensions,
+            presets: [
+                [
+                    '@babel/preset-typescript',
+                    {
+                        allowDeclareFields: true,
+                    },
+                ],
+            ],
+            plugins: [
+                ['@babel/plugin-proposal-decorators', { legacy: true }],
+                ['@babel/plugin-proposal-class-properties', { loose: true }],
+            ],
+        }),
     ];
 };
 async function compileScripts() {
