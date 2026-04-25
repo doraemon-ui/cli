@@ -106,7 +106,6 @@ export function rollupConfig (opts: RollupConfig = {}): { inputOptions: RollupIn
     name: options.libraryName,
     sourcemap: rollupConfig.sourceMap,
     banner,
-    exports: 'auto'
   }
   return {
     inputOptions,
@@ -157,5 +156,4 @@ export interface RollupOutOptions {
   name?: string
   sourcemap?: boolean
   banner?: string
-  exports?: 'default' | 'named' | 'none' | 'auto'
 }

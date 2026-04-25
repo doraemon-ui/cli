@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import fg from 'fast-glob'
 import chokidar from 'chokidar'
 import { rollup, watch as rollupWatch } from 'rollup'
-import type { RollupBuild, RollupOptions, RollupWatcher } from 'rollup'
+import type { Plugin as RollupPlugin, RollupBuild, RollupOptions, RollupWatcher } from 'rollup'
 import typescript from '@rollup/plugin-typescript'
 import commonjs from '@rollup/plugin-commonjs'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -13,7 +13,7 @@ import autoprefixer from 'autoprefixer'
 import less from 'less'
 import cssbeautify from 'cssbeautify'
 import csstree from 'css-tree'
-import type { Atrule, CssNode, Declaration, ListItem, MediaFeature } from 'css-tree'
+import type { Atrule, CssNode, Declaration, ListItem } from 'css-tree'
 import util from '../shared/util'
 
 const buildDir = util.buildDir
@@ -137,8 +137,8 @@ function convertCssVars(css: string, options: ConvertCssVarsOptions = { bodyNode
     let isDark = false
     if (!atrule) return false
     csstree.walk(atrule, {
-      visit: 'MediaFeature',
-      enter(node: MediaFeature) {
+      visit: 'Feature' as never,
+      enter(node) {
         if (node.name === 'prefers-color-scheme' && node.value && node.value.type === 'Identifier' && node.value.name === 'dark') {
           isDark = true
         }
@@ -301,6 +301,19 @@ async function copyAssets(): Promise<void> {
   )
 }
 
+const getCommonPlugins = (): RollupPlugin[] => {
+  return [
+    nodeResolve({
+      mainFields: ['module', 'main', 'jsnext:main', 'browser'],
+      extensions,
+    }),
+    commonjs({
+      include: /node_modules/,
+    }),
+    typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+  ]
+}
+
 async function compileScripts(): Promise<void> {
   const patterns = normalizePatterns(config.entry)
   const inputFiles = await fg(patterns, { cwd: buildDir, absolute: true })
@@ -311,16 +324,8 @@ async function compileScripts(): Promise<void> {
 
   const bundle = await rollup({
     input: inputFiles,
-    plugins: [
-      nodeResolve({
-        mainFields: ['module', 'main', 'jsnext:main', 'browser'],
-        extensions,
-      }),
-      commonjs({
-        include: /node_modules/,
-      }),
-      typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
-    ],
+    external: [/@doraemon-ui/],
+    plugins: [...getCommonPlugins()],
     onwarn(warning, warn) {
       if (warning.code === 'THIS_IS_UNDEFINED') return
       // if (warning.message.includes('using named and default exports together')) return
@@ -336,7 +341,6 @@ async function compileScripts(): Promise<void> {
     preserveModulesRoot: path.join(buildDir, 'src'),
     sourcemap: false,
     banner: util.banner(),
-    exports: 'auto',
   })
   await bundle.close()
 }
@@ -384,15 +388,9 @@ async function createWatcher(opts: ComponentConfig = {}): Promise<RollupWatcher>
 
   const watchOptions: RollupOptions = {
     input: inputFiles,
+    external: [/@doraemon-ui/],
     plugins: [
-      nodeResolve({
-        mainFields: ['module', 'main', 'jsnext:main', 'browser'],
-        extensions,
-      }),
-      commonjs({
-        include: /node_modules/,
-      }),
-      typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+      ...getCommonPlugins(),
       copy({
         targets: [
           {
@@ -410,7 +408,6 @@ async function createWatcher(opts: ComponentConfig = {}): Promise<RollupWatcher>
       preserveModulesRoot: path.join(buildDir, 'src'),
       sourcemap: false,
       banner: util.banner(),
-      exports: 'auto',
     },
     watch: {
       include: [path.join(buildDir, 'src', '**')],
