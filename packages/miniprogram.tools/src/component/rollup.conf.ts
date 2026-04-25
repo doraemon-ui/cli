@@ -4,6 +4,7 @@ import fg from 'fast-glob'
 import chokidar from 'chokidar'
 import { rollup, watch as rollupWatch } from 'rollup'
 import type { Plugin as RollupPlugin, RollupBuild, RollupOptions, RollupWatcher } from 'rollup'
+import babel from '@rollup/plugin-babel'
 import typescript from '@rollup/plugin-typescript'
 import commonjs from '@rollup/plugin-commonjs'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -310,7 +311,23 @@ const getCommonPlugins = (): RollupPlugin[] => {
     commonjs({
       include: /node_modules/,
     }),
-    typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+    // typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+    babel({
+      babelHelpers: 'bundled',
+      extensions,
+      presets: [
+        [
+          '@babel/preset-typescript',
+          {
+            allowDeclareFields: true,
+          },
+        ],
+      ],
+      plugins: [
+        ['@babel/plugin-proposal-decorators', { legacy: true }],
+        ['@babel/plugin-proposal-class-properties', { loose: true }],
+      ],
+    }),
   ]
 }
 
