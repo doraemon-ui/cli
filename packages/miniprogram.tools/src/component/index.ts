@@ -1,1 +1,1 @@
-export * from './rollup.conf'
+export { buildComponent } from './rollup.conf'
