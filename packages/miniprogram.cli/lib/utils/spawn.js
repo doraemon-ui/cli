@@ -63,7 +63,7 @@ function spawn(param) {
     exec.on('close', (code) => {
         typeof param.onClose === 'function' && param.onClose(code);
     });
-    exec.on('error', error => {
+    exec.on('error', (error) => {
         typeof param.onError === 'function' && param.onError(error);
     });
 }

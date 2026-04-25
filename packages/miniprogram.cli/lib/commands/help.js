@@ -8,7 +8,7 @@ const chalk_1 = __importDefault(require("chalk"));
 const string_prototype_padend_1 = __importDefault(require("string.prototype.padend"));
 const getPadLength_1 = require("../utils/getPadLength");
 function help(api, options) {
-    api.registerCommand('help', args => {
+    api.registerCommand('help', (args) => {
         const command = args._[0];
         if (!command) {
             logMainHelp();
@@ -18,8 +18,7 @@ function help(api, options) {
         }
     });
     function logMainHelp() {
-        console.log('\n  Usage: dora <command> [options]\n' +
-            '\n  Commands:\n');
+        console.log('\n  Usage: dora <command> [options]\n' + '\n  Commands:\n');
         const commands = api.service.commands;
         const padLength = (0, getPadLength_1.getPadLength)(commands);
         for (const name in commands) {
@@ -48,7 +47,10 @@ function help(api, options) {
             }
             if (opts.details) {
                 console.log();
-                console.log(opts.details.split('\n').map(line => `  ${line}`).join('\n'));
+                console.log(opts.details
+                    .split('\n')
+                    .map((line) => `  ${line}`)
+                    .join('\n'));
             }
             console.log();
         }

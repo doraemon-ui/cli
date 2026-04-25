@@ -61,7 +61,7 @@ const tsconfig = fs.existsSync(path.join(buildDir, 'tsconfig.json'))
     ? path.join(buildDir, 'tsconfig.json')
     : path.join(rootDir, 'tsconfig.json');
 const defaultConfig = {
-    entry: ['./src/**/*.ts'],
+    entry: ['./src/**/*.ts', '!./src/**/*.d.ts', '!./src/**/types.ts'],
     outputDir: './miniprogram_dist',
     copyPlugin: {
         entry: ['./src/**/*.json', './src/**/*.wxml', './src/**/*.wxss', '!./src/**/*.ts'],
@@ -73,7 +73,11 @@ const defaultConfig = {
         },
     },
 };
-const config = Object.assign({}, defaultConfig, fs.existsSync(doraConfig) ? require(doraConfig) : {});
+let userConfig = {};
+if (fs.existsSync(doraConfig)) {
+    userConfig = require(doraConfig);
+}
+const config = Object.assign({}, defaultConfig, userConfig);
 function ensureDirectoryExists(filePath) {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
@@ -100,7 +104,7 @@ function resolveComponentPath(base, str) {
     const paths = str.split('/');
     let i = paths.length - 1;
     let pkg;
-    while (i) {
+    while (i > 0) {
         const packageJSONPath = path.join(base, paths.slice(0, i).join('/'), 'package.json');
         if (fs.existsSync(packageJSONPath)) {
             pkg = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'));
@@ -110,17 +114,20 @@ function resolveComponentPath(base, str) {
     }
     return pkg ? `${pkg.name}/${paths[paths.length - 1]}` : str;
 }
-function convertCssVars(css, options = { bodyNode: 'body', rootNode: 'root' }) {
+function convertCssVars(css, options = { bodyNode: 'page', rootNode: 'root' }) {
     const colorMap = {};
     const ast = css_tree_1.default.parse(css);
     const checkIsDarkRule = (atrule) => {
         let isDark = false;
         if (!atrule)
             return false;
-        css_tree_1.default.walk(atrule, (node) => {
-            if (node.type === 'MediaFeature' && node.name === 'prefers-color-scheme' && node.value.name === 'dark') {
-                isDark = true;
-            }
+        css_tree_1.default.walk(atrule, {
+            visit: 'MediaFeature',
+            enter(node) {
+                if (node.name === 'prefers-color-scheme' && node.value && node.value.type === 'Identifier' && node.value.name === 'dark') {
+                    isDark = true;
+                }
+            },
         });
         return isDark;
     };
@@ -128,11 +135,13 @@ function convertCssVars(css, options = { bodyNode: 'body', rootNode: 'root' }) {
         let isRoot = false;
         if (!astNode)
             return false;
-        css_tree_1.default.walk(astNode, (node) => {
-            if ((node.type === 'TypeSelector' && node.name === opts.bodyNode) ||
-                (node.type === 'PseudoClassSelector' && node.name === opts.rootNode)) {
-                isRoot = true;
-            }
+        css_tree_1.default.walk(astNode, {
+            enter(node) {
+                if ((node.type === 'TypeSelector' && node.name === opts.bodyNode) ||
+                    (node.type === 'PseudoClassSelector' && node.name === opts.rootNode)) {
+                    isRoot = true;
+                }
+            },
         });
         return isRoot;
     };
@@ -160,10 +169,10 @@ function convertCssVars(css, options = { bodyNode: 'body', rootNode: 'root' }) {
                 const isRootTag = checkIsRootTag(this.rule?.prelude, options);
                 const isSingle = checkIsSingleRoot(this.rule?.prelude, options);
                 if (isMediaDark && isRootTag) {
-                    colorMap[`${node.property}_dark`] = node.value;
+                    colorMap[`${node.property}_dark`] = { value: css_tree_1.default.generate(node.value) };
                 }
                 else if (!isMediaDark && isSingle) {
-                    colorMap[node.property] = node.value;
+                    colorMap[node.property] = { value: css_tree_1.default.generate(node.value) };
                 }
             }
         },
@@ -173,11 +182,9 @@ function convertCssVars(css, options = { bodyNode: 'body', rootNode: 'root' }) {
             const varNames = [];
             css_tree_1.default.walk(node, (child) => {
                 if (child.type === 'Function' && child.name === 'var') {
-                    let varName = '';
                     css_tree_1.default.walk(child, (inner) => {
                         if (inner.type === 'Identifier') {
-                            varName = inner.name;
-                            varNames.push(varName);
+                            varNames.push(inner.name);
                         }
                     });
                 }
@@ -214,12 +221,15 @@ function injectCssImports(content) {
     while (startMatch && endMatch) {
         const startIndex = startMatch.index || 0;
         const endIndex = endMatch.index || 0;
-        const injected = result.slice(startIndex + startMatch[0].length, endIndex);
         result = result.slice(0, startIndex) + `@import '${startMatch[1]}';\n` + result.slice(endIndex + endMatch[0].length);
         startMatch = result.match(INJECT_REG);
         endMatch = result.match(END_INJECT_REG);
     }
     return result;
+}
+function getOutputPath(file, ext) {
+    const relativePath = path.relative(path.join(buildDir, 'src'), file);
+    return path.join(buildDir, config.outputDir, relativePath.replace(/\.(ts|less|json|wxml|wxss)$/, ext));
 }
 async function compileStyles() {
     const patterns = normalizePatterns(config.cssPlugin.entry);
@@ -232,9 +242,9 @@ async function compileStyles() {
         });
         const processed = await (0, postcss_1.default)([(0, autoprefixer_1.default)()]).process(lessResult.css, { from: undefined });
         let transformed = processed.css;
-        transformed = convertCssVars(transformed, config.cssPlugin);
+        transformed = convertCssVars(transformed);
         transformed = injectCssImports(transformed);
-        const outputFile = path.join(buildDir, config.outputDir, path.relative(buildDir, file).replace(/\.less$/, '.wxss'));
+        const outputFile = getOutputPath(file, '.wxss');
         ensureDirectoryExists(outputFile);
         fs.writeFileSync(outputFile, transformed, 'utf8');
     }));
@@ -243,15 +253,14 @@ async function copyAssets() {
     const patterns = normalizePatterns(config.copyPlugin.entry);
     const files = await (0, fast_glob_1.default)(patterns, { cwd: buildDir, absolute: true });
     await Promise.all(files.map(async (file) => {
-        const relativeFile = path.relative(buildDir, file);
-        const destFile = path.join(buildDir, config.outputDir, relativeFile);
-        ensureDirectoryExists(destFile);
+        const outputFile = getOutputPath(file, path.extname(file));
+        ensureDirectoryExists(outputFile);
         if (/\.json$/i.test(file)) {
             const content = fs.readFileSync(file, 'utf8');
-            fs.writeFileSync(destFile, transformUsingComponents(content, file), 'utf8');
+            fs.writeFileSync(outputFile, transformUsingComponents(content, file), 'utf8');
         }
         else {
-            fs.copyFileSync(file, destFile);
+            fs.copyFileSync(file, outputFile);
         }
     }));
 }
@@ -263,20 +272,27 @@ async function compileScripts() {
     }
     const bundle = await (0, rollup_1.rollup)({
         input: inputFiles,
-        plugins: [(0, plugin_node_resolve_1.default)({ preferBuiltins: true }), (0, plugin_commonjs_1.default)(), (0, plugin_typescript_1.default)({ tsconfig })],
+        plugins: [
+            (0, plugin_node_resolve_1.default)({ preferBuiltins: true }),
+            (0, plugin_commonjs_1.default)(),
+            (0, plugin_typescript_1.default)({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+        ],
         onwarn(warning, warn) {
             if (warning.code === 'THIS_IS_UNDEFINED')
                 return;
+            // if (warning.message.includes('using named and default exports together')) return
+            // if (warning.message.includes('Empty chunk')) return
             warn(warning);
         },
     });
     await bundle.write({
         dir: path.join(buildDir, config.outputDir),
-        format: 'cjs',
+        format: 'esm',
         preserveModules: true,
         preserveModulesRoot: path.join(buildDir, 'src'),
         sourcemap: false,
         banner: util_1.default.banner(),
+        exports: 'auto',
     });
     await bundle.close();
 }
@@ -312,7 +328,7 @@ async function createWatcher(opts = {}) {
         plugins: [
             (0, plugin_node_resolve_1.default)({ preferBuiltins: true }),
             (0, plugin_commonjs_1.default)(),
-            (0, plugin_typescript_1.default)({ tsconfig }),
+            (0, plugin_typescript_1.default)({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
             (0, rollup_plugin_copy_1.default)({
                 targets: [
                     {
@@ -323,16 +339,15 @@ async function createWatcher(opts = {}) {
                 flatten: false,
             }),
         ],
-        output: [
-            {
-                dir: path.join(buildDir, config.outputDir),
-                format: 'cjs',
-                preserveModules: true,
-                preserveModulesRoot: path.join(buildDir, 'src'),
-                sourcemap: false,
-                banner: util_1.default.banner(),
-            },
-        ],
+        output: {
+            dir: path.join(buildDir, config.outputDir),
+            format: 'esm',
+            preserveModules: true,
+            preserveModulesRoot: path.join(buildDir, 'src'),
+            sourcemap: false,
+            banner: util_1.default.banner(),
+            exports: 'auto',
+        },
         watch: {
             include: [path.join(buildDir, 'src', '**')],
         },

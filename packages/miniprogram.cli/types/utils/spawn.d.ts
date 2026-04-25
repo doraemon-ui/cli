@@ -4,7 +4,7 @@
  * @param {ISpawnParam} param
  */
 declare function spawn(param: ISpawnParam): void;
-export { spawn, };
+export { spawn };
 interface ISpawnParam {
     command: string;
     args?: string[];

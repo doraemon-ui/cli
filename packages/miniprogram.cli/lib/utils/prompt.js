@@ -75,7 +75,7 @@ async function getComponentType() {
                 value: ComponentType.MiniprogramComponentSnippet,
             },
         ],
-    }).then(answer => {
+    }).then((answer) => {
         return answer.componentType;
     });
 }
@@ -105,7 +105,7 @@ async function getNpmScope() {
             // new inquirer.Separator(),
             // 'others'
         ],
-    }).then(answer => answer.npmScope);
+    }).then((answer) => answer.npmScope);
     // if (scope === 'others') {
     //   scope = await prompt({
     //     name: 'inputNpmScope',

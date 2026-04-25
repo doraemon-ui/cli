@@ -73,7 +73,7 @@ function rollupConfig(opts = {}) {
     const peerDependencies = packageJSON.peerDependencies || {};
     const dependencies = packageJSON.dependencies || {};
     const externalDependencies = options.bundleDependencies ? Object.keys(peerDependencies) : Object.keys(Object.assign({}, dependencies, peerDependencies));
-    const externals = id => externalDependencies.filter(dep => internals.indexOf(dep) === -1).some(dep => (new RegExp(`^${dep}`)).test(id));
+    const externals = (id) => externalDependencies.filter(dep => internals.indexOf(dep) === -1).some(dep => (new RegExp(`^${dep}`)).test(id));
     const input = path.join(buildDir, options.entry) || path.join(buildDir, 'src/index.ts');
     const outputFile = options.outputFile || path.join(buildDir, 'miniprogram_dist/index.js');
     const copyFile = [
@@ -129,6 +129,7 @@ function rollupConfig(opts = {}) {
         name: options.libraryName,
         sourcemap: rollupConfig.sourceMap,
         banner,
+        exports: 'auto'
     };
     return {
         inputOptions,

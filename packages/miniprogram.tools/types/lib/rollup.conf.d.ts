@@ -1,3 +1,8 @@
+import type { Plugin as RollupPlugin } from 'rollup';
+interface CopyTarget {
+    src: string;
+    dest: string;
+}
 /**
  * Get rollup config
  *
@@ -19,16 +24,12 @@ export interface RollupConfig {
     entry?: string;
     outputFile?: string;
     format?: 'esm';
-    copy?: any[] | boolean;
+    copy?: CopyTarget[] | boolean;
     libraryName?: string;
     bundleDependencies?: boolean;
-    internals?: any[];
-    namedExports?: {
-        [key: string]: any;
-    };
-    env?: {
-        [key: string]: any;
-    };
+    internals?: string[];
+    namedExports?: Record<string, string[]>;
+    env?: Record<string, string>;
 }
 /**
  * 入口配置
@@ -38,8 +39,8 @@ export interface RollupConfig {
  */
 export interface RollupInputOptions {
     input?: string;
-    external?: any[];
-    plugins?: any[];
+    external?: (string | RegExp)[];
+    plugins?: RollupPlugin[];
     inlineDynamicImports?: boolean;
 }
 /**
@@ -54,4 +55,6 @@ export interface RollupOutOptions {
     name?: string;
     sourcemap?: boolean;
     banner?: string;
+    exports?: 'default' | 'named' | 'none' | 'auto';
 }
+export {};
