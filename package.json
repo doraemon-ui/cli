@@ -50,10 +50,10 @@
     "lint:fix": "pnpm run eslint:fix && pnpm run stylelint:fix",
     "pre-commit": "lint-staged",
     "changed": "pnpm exec lerna changed --include-merged-tags",
-    "publish:alpha": "pnpm exec lerna publish prerelease --include-merged-tags --allow-branch '**' --pre-dist-tag alpha --preid alpha --force-git-tag --no-git-reset --ignore-scripts",
-    "publish:beta": "pnpm exec lerna publish prerelease --include-merged-tags --allow-branch '**' --pre-dist-tag beta --preid beta --force-git-tag --no-git-reset --ignore-scripts",
-    "publish:omega": "pnpm exec lerna publish prerelease --include-merged-tags --allow-branch '**' --pre-dist-tag omega --preid omega --force-git-tag --no-git-reset --ignore-scripts",
-    "release": "pnpm exec lerna publish --conventional-commits --conventional-graduate --include-merged-tags --no-git-reset --ignore-scripts --changelog-preset angular",
+    "publish:alpha": "pnpm exec lerna publish prerelease --include-merged-tags --allow-branch '**' --pre-dist-tag alpha --preid alpha --force-git-tag --no-git-reset --ignore-scripts --no-verify-access",
+    "publish:beta": "pnpm exec lerna publish prerelease --include-merged-tags --allow-branch '**' --pre-dist-tag beta --preid beta --force-git-tag --no-git-reset --ignore-scripts --no-verify-access",
+    "publish:omega": "pnpm exec lerna publish prerelease --include-merged-tags --allow-branch '**' --pre-dist-tag omega --preid omega --force-git-tag --no-git-reset --ignore-scripts --no-verify-access",
+    "release": "pnpm exec lerna publish --conventional-commits --conventional-graduate --include-merged-tags --no-git-reset --ignore-scripts --no-verify-access --changelog-preset angular",
     "preinstall": "npx only-allow pnpm"
   },
   "husky": {
