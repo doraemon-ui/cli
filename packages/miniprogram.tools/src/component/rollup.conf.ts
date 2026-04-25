@@ -7,7 +7,7 @@ import type { RollupBuild, RollupOptions, RollupWatcher } from 'rollup'
 import typescript from '@rollup/plugin-typescript'
 import commonjs from '@rollup/plugin-commonjs'
 import nodeResolve from '@rollup/plugin-node-resolve'
-import copyPlugin from 'rollup-plugin-copy'
+import copy from 'rollup-plugin-copy'
 import postcss from 'postcss'
 import autoprefixer from 'autoprefixer'
 import less from 'less'
@@ -18,6 +18,7 @@ import util from '../shared/util'
 
 const buildDir = util.buildDir
 const rootDir = util.rootDir
+const extensions: string[] = ['.js', '.ts']
 
 const doraConfig = fs.existsSync(path.join(buildDir, 'dora.config.js'))
   ? path.join(buildDir, 'dora.config.js')
@@ -311,8 +312,13 @@ async function compileScripts(): Promise<void> {
   const bundle = await rollup({
     input: inputFiles,
     plugins: [
-      nodeResolve({ preferBuiltins: true }),
-      commonjs(),
+      nodeResolve({
+        mainFields: ['module', 'main', 'jsnext:main', 'browser'],
+        extensions,
+      }),
+      commonjs({
+        include: /node_modules/,
+      }),
       typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
     ],
     onwarn(warning, warn) {
@@ -379,10 +385,15 @@ async function createWatcher(opts: ComponentConfig = {}): Promise<RollupWatcher>
   const watchOptions: RollupOptions = {
     input: inputFiles,
     plugins: [
-      nodeResolve({ preferBuiltins: true }),
-      commonjs(),
+      nodeResolve({
+        mainFields: ['module', 'main', 'jsnext:main', 'browser'],
+        extensions,
+      }),
+      commonjs({
+        include: /node_modules/,
+      }),
       typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
-      copyPlugin({
+      copy({
         targets: [
           {
             src: normalizePatterns(config.copyPlugin.entry).map((pattern) => path.join(buildDir, pattern)),
