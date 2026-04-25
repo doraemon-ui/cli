@@ -54,6 +54,7 @@ const css_tree_1 = __importDefault(require("css-tree"));
 const util_1 = __importDefault(require("../shared/util"));
 const buildDir = util_1.default.buildDir;
 const rootDir = util_1.default.rootDir;
+const extensions = ['.js', '.ts'];
 const doraConfig = fs.existsSync(path.join(buildDir, 'dora.config.js'))
     ? path.join(buildDir, 'dora.config.js')
     : path.join(rootDir, 'dora.config.js');
@@ -273,8 +274,13 @@ async function compileScripts() {
     const bundle = await (0, rollup_1.rollup)({
         input: inputFiles,
         plugins: [
-            (0, plugin_node_resolve_1.default)({ preferBuiltins: true }),
-            (0, plugin_commonjs_1.default)(),
+            (0, plugin_node_resolve_1.default)({
+                mainFields: ['module', 'main', 'jsnext:main', 'browser'],
+                extensions,
+            }),
+            (0, plugin_commonjs_1.default)({
+                include: /node_modules/,
+            }),
             (0, plugin_typescript_1.default)({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
         ],
         onwarn(warning, warn) {
@@ -326,8 +332,13 @@ async function createWatcher(opts = {}) {
     const watchOptions = {
         input: inputFiles,
         plugins: [
-            (0, plugin_node_resolve_1.default)({ preferBuiltins: true }),
-            (0, plugin_commonjs_1.default)(),
+            (0, plugin_node_resolve_1.default)({
+                mainFields: ['module', 'main', 'jsnext:main', 'browser'],
+                extensions,
+            }),
+            (0, plugin_commonjs_1.default)({
+                include: /node_modules/,
+            }),
             (0, plugin_typescript_1.default)({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
             (0, rollup_plugin_copy_1.default)({
                 targets: [
