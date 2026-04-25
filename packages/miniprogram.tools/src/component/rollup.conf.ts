@@ -3,6 +3,7 @@ import * as fs from 'fs'
 import fg from 'fast-glob'
 import chokidar from 'chokidar'
 import { rollup, watch as rollupWatch } from 'rollup'
+import type { RollupBuild, RollupOptions, RollupWatcher } from 'rollup'
 import typescript from '@rollup/plugin-typescript'
 import commonjs from '@rollup/plugin-commonjs'
 import nodeResolve from '@rollup/plugin-node-resolve'
@@ -12,6 +13,7 @@ import autoprefixer from 'autoprefixer'
 import less from 'less'
 import cssbeautify from 'cssbeautify'
 import csstree from 'css-tree'
+import type { Atrule, CssNode, Declaration, ListItem, MediaFeature } from 'css-tree'
 import util from '../shared/util'
 
 const buildDir = util.buildDir
@@ -25,8 +27,26 @@ const tsconfig = fs.existsSync(path.join(buildDir, 'tsconfig.json'))
   ? path.join(buildDir, 'tsconfig.json')
   : path.join(rootDir, 'tsconfig.json')
 
-const defaultConfig = {
-  entry: ['./src/**/*.ts'],
+export interface CopyPluginConfig {
+  entry: string | string[]
+}
+
+export interface CssPluginConfig {
+  entry: string | string[]
+  pxTransform?: {
+    designWidth: number
+  }
+}
+
+export interface DoraConfig {
+  entry?: string | string[]
+  outputDir?: string
+  copyPlugin?: CopyPluginConfig
+  cssPlugin?: CssPluginConfig
+}
+
+const defaultConfig: Required<DoraConfig> = {
+  entry: ['./src/**/*.ts', '!./src/**/*.d.ts', '!./src/**/types.ts'],
   outputDir: './miniprogram_dist',
   copyPlugin: {
     entry: ['./src/**/*.json', './src/**/*.wxml', './src/**/*.wxss', '!./src/**/*.ts'],
@@ -39,45 +59,57 @@ const defaultConfig = {
   },
 }
 
-const config = Object.assign({}, defaultConfig, fs.existsSync(doraConfig) ? require(doraConfig) : {})
+let userConfig: DoraConfig = {}
+if (fs.existsSync(doraConfig)) {
+  userConfig = require(doraConfig) as DoraConfig
+}
+const config: Required<DoraConfig> = Object.assign({}, defaultConfig, userConfig)
 
-function ensureDirectoryExists(filePath: string) {
+interface UsingComponents {
+  usingComponents?: Record<string, string>
+}
+
+function ensureDirectoryExists(filePath: string): void {
   const dir = path.dirname(filePath)
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true })
   }
 }
 
-function normalizePatterns(patterns: string[] | string) {
+function normalizePatterns(patterns: string | string[]): string[] {
   return Array.isArray(patterns) ? patterns : [patterns]
 }
 
 function transformUsingComponents(content: string, filePath: string): string {
   const fileDir = path.dirname(filePath)
-  const value = JSON.parse(content)
+  const value = JSON.parse(content) as UsingComponents
 
   if (!value.usingComponents) {
     return content
   }
 
-  const usingComponents: Record<string, any> = {}
+  const usingComponents: Record<string, string> = {}
   Object.keys(value.usingComponents).forEach((key) => {
-    const componentPath = value.usingComponents[key]
+    const componentPath = value.usingComponents![key]
     usingComponents[key] = resolveComponentPath(fileDir, componentPath)
   })
 
   return JSON.stringify(Object.assign({}, value, { usingComponents }), null, 2)
 }
 
-function resolveComponentPath(base: string, str: string) {
+interface PackageJSON {
+  name: string
+}
+
+function resolveComponentPath(base: string, str: string): string {
   const paths = str.split('/')
   let i = paths.length - 1
-  let pkg: Record<string, any> | undefined
+  let pkg: PackageJSON | undefined
 
-  while (i) {
+  while (i > 0) {
     const packageJSONPath = path.join(base, paths.slice(0, i).join('/'), 'package.json')
     if (fs.existsSync(packageJSONPath)) {
-      pkg = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'))
+      pkg = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8')) as PackageJSON
       break
     }
     i--
@@ -86,40 +118,55 @@ function resolveComponentPath(base: string, str: string) {
   return pkg ? `${pkg.name}/${paths[paths.length - 1]}` : str
 }
 
-function convertCssVars(css: string, options = { bodyNode: 'body', rootNode: 'root' }) {
-  const colorMap: Record<string, any> = {}
+interface ConvertCssVarsOptions {
+  bodyNode: string
+  rootNode: string
+}
+
+interface ColorMapValue {
+  value: string
+  type?: string
+}
+
+function convertCssVars(css: string, options: ConvertCssVarsOptions = { bodyNode: 'page', rootNode: 'root' }): string {
+  const colorMap: Record<string, ColorMapValue> = {}
   const ast = csstree.parse(css)
 
-  const checkIsDarkRule = (atrule: any) => {
+  const checkIsDarkRule = (atrule: Atrule | null): boolean => {
     let isDark = false
     if (!atrule) return false
-    csstree.walk(atrule, (node) => {
-      if (node.type === 'MediaFeature' && node.name === 'prefers-color-scheme' && node.value.name === 'dark') {
-        isDark = true
-      }
+    csstree.walk(atrule, {
+      visit: 'MediaFeature',
+      enter(node: MediaFeature) {
+        if (node.name === 'prefers-color-scheme' && node.value && node.value.type === 'Identifier' && node.value.name === 'dark') {
+          isDark = true
+        }
+      },
     })
     return isDark
   }
 
-  const checkIsRootTag = (astNode: any, opts: any) => {
+  const checkIsRootTag = (astNode: CssNode | null | undefined, opts: ConvertCssVarsOptions): boolean => {
     let isRoot = false
     if (!astNode) return false
-    csstree.walk(astNode, (node) => {
-      if (
-        (node.type === 'TypeSelector' && node.name === opts.bodyNode) ||
-        (node.type === 'PseudoClassSelector' && node.name === opts.rootNode)
-      ) {
-        isRoot = true
-      }
+    csstree.walk(astNode, {
+      enter(node: CssNode) {
+        if (
+          (node.type === 'TypeSelector' && node.name === opts.bodyNode) ||
+          (node.type === 'PseudoClassSelector' && node.name === opts.rootNode)
+        ) {
+          isRoot = true
+        }
+      },
     })
     return isRoot
   }
 
-  const checkIsSingleRoot = (astNode: any, opts: any) => {
+  const checkIsSingleRoot = (astNode: CssNode | null | undefined, opts: ConvertCssVarsOptions): boolean => {
     let isSingle = false
     if (!astNode) return false
     csstree.walk(astNode, {
-      enter(node, item) {
+      enter(node: CssNode, item: ListItem<CssNode>) {
         if (
           (node.type === 'TypeSelector' && node.name === opts.bodyNode) ||
           (node.type === 'PseudoClassSelector' && node.name === opts.rootNode)
@@ -135,31 +182,29 @@ function convertCssVars(css: string, options = { bodyNode: 'body', rootNode: 'ro
 
   csstree.walk(ast, {
     visit: 'Declaration',
-    enter(node, item, list) {
+    enter(this: csstree.WalkContext, node: Declaration, item: ListItem<CssNode>, list: csstree.List<CssNode>) {
       if (node.property && /^--/.test(node.property)) {
-        const isMediaDark = checkIsDarkRule(this.atrule)
+        const isMediaDark = checkIsDarkRule(this.atrule as Atrule | null)
         const isRootTag = checkIsRootTag(this.rule?.prelude, options)
         const isSingle = checkIsSingleRoot(this.rule?.prelude, options)
 
         if (isMediaDark && isRootTag) {
-          colorMap[`${node.property}_dark`] = node.value
+          colorMap[`${node.property}_dark`] = { value: csstree.generate(node.value) }
         } else if (!isMediaDark && isSingle) {
-          colorMap[node.property] = node.value
+          colorMap[node.property] = { value: csstree.generate(node.value) }
         }
       }
     },
   })
 
-  csstree.walk(ast, (node, item, list) => {
+  csstree.walk(ast, (node: CssNode, item: ListItem<CssNode>, list: csstree.List<CssNode>) => {
     if (node.type === 'Declaration') {
       const varNames: string[] = []
-      csstree.walk(node, (child) => {
+      csstree.walk(node, (child: CssNode) => {
         if (child.type === 'Function' && child.name === 'var') {
-          let varName = ''
-          csstree.walk(child, (inner) => {
+          csstree.walk(child, (inner: CssNode) => {
             if (inner.type === 'Identifier') {
-              varName = inner.name
-              varNames.push(varName)
+              varNames.push(inner.name)
             }
           })
         }
@@ -173,7 +218,7 @@ function convertCssVars(css: string, options = { bodyNode: 'body', rootNode: 'ro
             cssStyle = cssStyle.replace(reg, colorMap[name].value.trim())
           }
         }
-        const rule = {
+        const rule: ListItem<CssNode> = {
           prev: null,
           next: null,
           data: csstree.parse(cssStyle, { context: 'declaration' }),
@@ -190,7 +235,7 @@ function convertCssVars(css: string, options = { bodyNode: 'body', rootNode: 'ro
   })
 }
 
-function injectCssImports(content: string) {
+function injectCssImports(content: string): string {
   const INJECT_REG = /\/\*! inject:wxss:(.*) \*\//
   const END_INJECT_REG = /\/\*! endinject \*\//
   let result = content
@@ -200,7 +245,6 @@ function injectCssImports(content: string) {
   while (startMatch && endMatch) {
     const startIndex = startMatch.index || 0
     const endIndex = endMatch.index || 0
-    const injected = result.slice(startIndex + startMatch[0].length, endIndex)
     result = result.slice(0, startIndex) + `@import '${startMatch[1]}';\n` + result.slice(endIndex + endMatch[0].length)
     startMatch = result.match(INJECT_REG)
     endMatch = result.match(END_INJECT_REG)
@@ -209,7 +253,12 @@ function injectCssImports(content: string) {
   return result
 }
 
-async function compileStyles() {
+function getOutputPath(file: string, ext: string): string {
+  const relativePath = path.relative(path.join(buildDir, 'src'), file)
+  return path.join(buildDir, config.outputDir, relativePath.replace(/\.(ts|less|json|wxml|wxss)$/, ext))
+}
+
+async function compileStyles(): Promise<void> {
   const patterns = normalizePatterns(config.cssPlugin.entry)
   const files = await fg(patterns, { cwd: buildDir, absolute: true })
 
@@ -222,37 +271,36 @@ async function compileStyles() {
       })
       const processed = await postcss([autoprefixer()]).process(lessResult.css, { from: undefined })
       let transformed = processed.css
-      transformed = convertCssVars(transformed, config.cssPlugin)
+      transformed = convertCssVars(transformed)
       transformed = injectCssImports(transformed)
 
-      const outputFile = path.join(buildDir, config.outputDir, path.relative(buildDir, file).replace(/\.less$/, '.wxss'))
+      const outputFile = getOutputPath(file, '.wxss')
       ensureDirectoryExists(outputFile)
       fs.writeFileSync(outputFile, transformed, 'utf8')
     }),
   )
 }
 
-async function copyAssets() {
+async function copyAssets(): Promise<void> {
   const patterns = normalizePatterns(config.copyPlugin.entry)
   const files = await fg(patterns, { cwd: buildDir, absolute: true })
 
   await Promise.all(
     files.map(async (file) => {
-      const relativeFile = path.relative(buildDir, file)
-      const destFile = path.join(buildDir, config.outputDir, relativeFile)
-      ensureDirectoryExists(destFile)
+      const outputFile = getOutputPath(file, path.extname(file))
+      ensureDirectoryExists(outputFile)
 
       if (/\.json$/i.test(file)) {
         const content = fs.readFileSync(file, 'utf8')
-        fs.writeFileSync(destFile, transformUsingComponents(content, file), 'utf8')
+        fs.writeFileSync(outputFile, transformUsingComponents(content, file), 'utf8')
       } else {
-        fs.copyFileSync(file, destFile)
+        fs.copyFileSync(file, outputFile)
       }
     }),
   )
 }
 
-async function compileScripts() {
+async function compileScripts(): Promise<void> {
   const patterns = normalizePatterns(config.entry)
   const inputFiles = await fg(patterns, { cwd: buildDir, absolute: true })
 
@@ -262,37 +310,52 @@ async function compileScripts() {
 
   const bundle = await rollup({
     input: inputFiles,
-    plugins: [nodeResolve({ preferBuiltins: true }), commonjs(), typescript({ tsconfig })],
+    plugins: [
+      nodeResolve({ preferBuiltins: true }),
+      commonjs(),
+      typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
+    ],
     onwarn(warning, warn) {
       if (warning.code === 'THIS_IS_UNDEFINED') return
+      // if (warning.message.includes('using named and default exports together')) return
+      // if (warning.message.includes('Empty chunk')) return
       warn(warning)
     },
   })
 
   await bundle.write({
     dir: path.join(buildDir, config.outputDir),
-    format: 'cjs',
+    format: 'esm',
     preserveModules: true,
     preserveModulesRoot: path.join(buildDir, 'src'),
     sourcemap: false,
     banner: util.banner(),
+    exports: 'auto',
   })
   await bundle.close()
 }
 
-function onBuildStart(opts: ComponentConfig) {
+interface ComponentConfig {
+  _?: string | string[]
+  series?: 'series' | 'parallel'
+  onStartMsg?: string
+  onCloseMsg?: string
+  onListening?: (eventName: 'start' | 'stop' | 'error') => Promise<void>
+}
+
+function onBuildStart(opts: ComponentConfig): void {
   console.info(opts.onStartMsg || '正在构建当前组件')
 }
 
-function onBuildEnd(opts: ComponentConfig) {
+function onBuildEnd(opts: ComponentConfig): void {
   console.info(opts.onCloseMsg || '构建完成惹')
 }
 
-function onBuildError(err: any) {
+function onBuildError(err: Error): void {
   console.error(err)
 }
 
-function debounce(fn: () => void, delay = 100) {
+function debounce(fn: () => void, delay = 100): () => void {
   let timer: NodeJS.Timeout | null = null
   return () => {
     if (timer) {
@@ -302,22 +365,23 @@ function debounce(fn: () => void, delay = 100) {
   }
 }
 
-async function performBuild(opts: ComponentConfig = {}) {
+async function performBuild(opts: ComponentConfig = {}): Promise<void> {
   onBuildStart(opts)
   await compileScripts()
   await Promise.all([copyAssets(), compileStyles()])
   onBuildEnd(opts)
 }
 
-async function createWatcher(opts: ComponentConfig = {}) {
+async function createWatcher(opts: ComponentConfig = {}): Promise<RollupWatcher> {
   const inputPatterns = normalizePatterns(config.entry)
   const inputFiles = await fg(inputPatterns, { cwd: buildDir, absolute: true })
-  const watchOptions = {
+
+  const watchOptions: RollupOptions = {
     input: inputFiles,
     plugins: [
       nodeResolve({ preferBuiltins: true }),
       commonjs(),
-      typescript({ tsconfig }),
+      typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
       copyPlugin({
         targets: [
           {
@@ -328,22 +392,22 @@ async function createWatcher(opts: ComponentConfig = {}) {
         flatten: false,
       }),
     ],
-    output: [
-      {
-        dir: path.join(buildDir, config.outputDir),
-        format: 'cjs',
-        preserveModules: true,
-        preserveModulesRoot: path.join(buildDir, 'src'),
-        sourcemap: false,
-        banner: util.banner(),
-      },
-    ],
+    output: {
+      dir: path.join(buildDir, config.outputDir),
+      format: 'esm',
+      preserveModules: true,
+      preserveModulesRoot: path.join(buildDir, 'src'),
+      sourcemap: false,
+      banner: util.banner(),
+      exports: 'auto',
+    },
     watch: {
       include: [path.join(buildDir, 'src', '**')],
     },
-  } as any
+  }
 
   const watcher = rollupWatch(watchOptions)
+
   watcher.on('event', async (event) => {
     if (event.code === 'BUNDLE_START') {
       onBuildStart(opts)
@@ -353,7 +417,7 @@ async function createWatcher(opts: ComponentConfig = {}) {
       onBuildEnd(opts)
       opts.onListening && opts.onListening('stop')
     } else if (event.code === 'ERROR') {
-      onBuildError(event.error)
+      onBuildError(event.error as unknown as Error)
       opts.onListening && opts.onListening('error')
     }
   })
@@ -393,7 +457,7 @@ async function createWatcher(opts: ComponentConfig = {}) {
   return watcher
 }
 
-function rollupBuild(opts: ComponentConfig = {}) {
+function rollupBuild(opts: ComponentConfig = {}): Promise<RollupBuild | RollupWatcher | void> {
   const tasks = Array.isArray(opts._) ? opts._ : typeof opts._ === 'string' ? [opts._] : []
   const watchMode = tasks.includes('watch')
 
@@ -408,11 +472,3 @@ function rollupBuild(opts: ComponentConfig = {}) {
 }
 
 export { rollupBuild as buildComponent }
-
-interface ComponentConfig {
-  _?: string | string[]
-  series?: 'series' | 'parallel'
-  onStartMsg?: string
-  onCloseMsg?: string
-  onListening?: (eventName: 'start' | 'stop' | 'error') => Promise<any>
-}

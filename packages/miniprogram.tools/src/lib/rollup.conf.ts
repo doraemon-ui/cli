@@ -5,15 +5,27 @@ import copy from 'rollup-plugin-copy'
 import replace from '@rollup/plugin-replace'
 import commonjs from '@rollup/plugin-commonjs'
 import typescript from '@rollup/plugin-typescript'
+import type { Plugin as RollupPlugin } from 'rollup'
 import util from '../shared/util'
 
 const buildDir = util.buildDir
 const rootDir = util.rootDir
-const extensions = ['.js', '.ts']
+const extensions: string[] = ['.js', '.ts']
 
-const tsconfig = fs.existsSync(path.join(buildDir, 'tsconfig.json')) ?
+const tsconfig: string = fs.existsSync(path.join(buildDir, 'tsconfig.json')) ?
   path.join(buildDir, 'tsconfig.json') :
   path.join(rootDir, 'tsconfig.json')
+
+interface FormatConfig {
+  sourceMap: boolean
+  external: (id: string) => boolean
+  plugins: RollupPlugin[]
+}
+
+interface CopyTarget {
+  src: string
+  dest: string
+}
 
 const defaultOpts: RollupConfig = {
   bundleDependencies: true,
@@ -30,23 +42,23 @@ const defaultOpts: RollupConfig = {
  * @param {RollupConfig} [opts={}]
  * @returns
  */
-export function rollupConfig (opts: RollupConfig = {}) {
-  const banner = util.banner()
-  const packageJSON = util.pkg()
+export function rollupConfig (opts: RollupConfig = {}): { inputOptions: RollupInputOptions; outputOptions: RollupOutOptions } {
+  const banner: string = util.banner()
+  const packageJSON: { peerDependencies?: Record<string, string>; dependencies?: Record<string, string> } = util.pkg()
   const options: RollupConfig = Object.assign({}, defaultOpts, opts)
-  const internals = options.internals || []
-  const peerDependencies = packageJSON.peerDependencies || {}
-  const dependencies = packageJSON.dependencies || {}
-  const externalDependencies = options.bundleDependencies ? Object.keys(peerDependencies) : Object.keys(Object.assign({}, dependencies, peerDependencies))
-  const externals = id => externalDependencies.filter(dep => internals.indexOf(dep) === -1).some(dep => (new RegExp(`^${dep}`)).test(id))
-  const input = path.join(buildDir, options.entry as string) || path.join(buildDir, 'src/index.ts')
-  const outputFile = options.outputFile || path.join(buildDir, 'miniprogram_dist/index.js')
-  const copyFile = [
+  const internals: string[] = options.internals || []
+  const peerDependencies: Record<string, string> = packageJSON.peerDependencies || {}
+  const dependencies: Record<string, string> = packageJSON.dependencies || {}
+  const externalDependencies: string[] = options.bundleDependencies ? Object.keys(peerDependencies) : Object.keys(Object.assign({}, dependencies, peerDependencies))
+  const externals = (id: string): boolean => externalDependencies.filter(dep => internals.indexOf(dep) === -1).some(dep => (new RegExp(`^${dep}`)).test(id))
+  const input: string = path.join(buildDir, options.entry as string) || path.join(buildDir, 'src/index.ts')
+  const outputFile: string = options.outputFile || path.join(buildDir, 'miniprogram_dist/index.js')
+  const copyFile: CopyTarget[] = [
     { src: 'src/**/*.json', dest: 'miniprogram_dist' },
     { src: 'src/**/*.wxss', dest: 'miniprogram_dist' },
     { src: 'src/**/*.wxml', dest: 'miniprogram_dist' },
   ]  
-  const commonPlugins = [
+  const commonPlugins: RollupPlugin[] = [
     copy({
       targets: Array.isArray(options.copy) ?
         options.copy : options.copy === false ?
@@ -65,7 +77,7 @@ export function rollupConfig (opts: RollupConfig = {}) {
       tsconfig,
     }),
   ]
-  const specificConfig = {
+  const specificConfig: { [key: string]: FormatConfig } = {
     'esm': {
       sourceMap: false,
       external: externals,
@@ -94,6 +106,7 @@ export function rollupConfig (opts: RollupConfig = {}) {
     name: options.libraryName,
     sourcemap: rollupConfig.sourceMap,
     banner,
+    exports: 'auto'
   }
   return {
     inputOptions,
@@ -111,12 +124,12 @@ export interface RollupConfig {
   entry?: string
   outputFile?: string
   format?: 'esm'
-  copy?: any[] | boolean
+  copy?: CopyTarget[] | boolean
   libraryName?: string
   bundleDependencies?: boolean
-  internals?: any[]
-  namedExports?: { [key: string]: any }
-  env?: { [key: string]: any }
+  internals?: string[]
+  namedExports?: Record<string, string[]>
+  env?: Record<string, string>
 }
 
 /**
@@ -127,8 +140,8 @@ export interface RollupConfig {
  */
 export interface RollupInputOptions {
   input?: string
-  external?: any[]
-  plugins?: any[]
+  external?: (string | RegExp)[]
+  plugins?: RollupPlugin[]
   inlineDynamicImports?: boolean
 }
 
@@ -144,4 +157,5 @@ export interface RollupOutOptions {
   name?: string
   sourcemap?: boolean
   banner?: string
+  exports?: 'default' | 'named' | 'none' | 'auto'
 }

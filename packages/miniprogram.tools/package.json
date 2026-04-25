@@ -51,6 +51,9 @@
     "access": "public"
   },
   "devDependencies": {
+    "@types/css-tree": "^2.3.11",
+    "@types/cssbeautify": "^0.3.5",
+    "@types/less": "^3.0.8",
     "@types/node": "^25.5.2"
   }
 }
