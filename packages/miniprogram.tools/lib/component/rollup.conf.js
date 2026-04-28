@@ -42,7 +42,7 @@ const fs = __importStar(require("fs"));
 const fast_glob_1 = __importDefault(require("fast-glob"));
 const chokidar_1 = __importDefault(require("chokidar"));
 const rollup_1 = require("rollup");
-const plugin_babel_1 = __importDefault(require("@rollup/plugin-babel"));
+const plugin_swc_1 = __importDefault(require("@rollup/plugin-swc"));
 const plugin_commonjs_1 = __importDefault(require("@rollup/plugin-commonjs"));
 const plugin_node_resolve_1 = __importDefault(require("@rollup/plugin-node-resolve"));
 const rollup_plugin_copy_1 = __importDefault(require("rollup-plugin-copy"));
@@ -275,21 +275,35 @@ const getCommonPlugins = () => {
             include: /node_modules/,
         }),
         // typescript({ tslib: require('tslib'), typescript: require('typescript'), tsconfig }),
-        (0, plugin_babel_1.default)({
-            babelHelpers: 'bundled',
-            extensions,
-            presets: [
-                [
-                    '@babel/preset-typescript',
-                    {
-                        allowDeclareFields: true,
+        // babel({
+        //   babelHelpers: 'bundled',
+        //   extensions,
+        //   presets: [
+        //     [
+        //       '@babel/preset-typescript',
+        //       {
+        //         allowDeclareFields: true,
+        //       },
+        //     ],
+        //   ],
+        //   plugins: [
+        //     ['@babel/plugin-proposal-decorators', { legacy: true }],
+        //     ['@babel/plugin-proposal-class-properties', { loose: true }],
+        //   ],
+        // }),
+        (0, plugin_swc_1.default)({
+            swc: {
+                jsc: {
+                    parser: {
+                        syntax: 'typescript',
+                        decorators: true,
                     },
-                ],
-            ],
-            plugins: [
-                ['@babel/plugin-proposal-decorators', { legacy: true }],
-                ['@babel/plugin-proposal-class-properties', { loose: true }],
-            ],
+                    transform: {
+                        legacyDecorator: true,
+                        useDefineForClassFields: false,
+                    },
+                },
+            },
         }),
     ];
 };
