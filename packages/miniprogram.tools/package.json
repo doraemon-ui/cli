@@ -30,6 +30,7 @@
     "@rollup/plugin-commonjs": "^29.0.2",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-replace": "^6.0.3",
+    "@rollup/plugin-swc": "^0.4.0",
     "@rollup/plugin-typescript": "^12.3.0",
     "@types/pretty-hrtime": "^1.0.3",
     "autoprefixer": "10.4.27",
