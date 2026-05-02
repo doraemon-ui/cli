@@ -339,6 +339,7 @@ const getCommonPlugins = (): RollupPlugin[] => {
           transform: {
             legacyDecorator: true,
             useDefineForClassFields: false,
+            decoratorMetadata: false,
           },
         },
       },

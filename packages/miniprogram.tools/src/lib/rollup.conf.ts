@@ -98,7 +98,6 @@ export function rollupConfig (opts: RollupConfig = {}): { inputOptions: RollupIn
     // external: rollupConfig.external || [],
     external: [/@doraemon-ui/],
     plugins: rollupConfig.plugins || [],
-    inlineDynamicImports: true,
   }
   const outputOptions: RollupOutOptions = {
     file: outputFile,
@@ -141,7 +140,6 @@ export interface RollupInputOptions {
   input?: string
   external?: (string | RegExp)[]
   plugins?: RollupPlugin[]
-  inlineDynamicImports?: boolean
 }
 
 /**
