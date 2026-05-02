@@ -301,6 +301,7 @@ const getCommonPlugins = () => {
                     transform: {
                         legacyDecorator: true,
                         useDefineForClassFields: false,
+                        decoratorMetadata: false,
                     },
                 },
             },

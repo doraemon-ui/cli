@@ -121,7 +121,6 @@ function rollupConfig(opts = {}) {
         // external: rollupConfig.external || [],
         external: [/@doraemon-ui/],
         plugins: rollupConfig.plugins || [],
-        inlineDynamicImports: true,
     };
     const outputOptions = {
         file: outputFile,

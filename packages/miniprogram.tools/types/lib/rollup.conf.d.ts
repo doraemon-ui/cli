@@ -41,7 +41,6 @@ export interface RollupInputOptions {
     input?: string;
     external?: (string | RegExp)[];
     plugins?: RollupPlugin[];
-    inlineDynamicImports?: boolean;
 }
 /**
  * 出口配置
