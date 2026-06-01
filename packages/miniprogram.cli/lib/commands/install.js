@@ -52,12 +52,12 @@ function install(api, options) {
 async function installPackage(to, packageName, dev = false) {
     const packageJSONPath = path.join(to, 'package.json');
     if (!fs.existsSync(packageJSONPath)) {
-        return Promise.reject('当前目录找不到 package.json 文件');
+        return Promise.reject('package.json not found in current directory');
     }
     const cwdPackageJSON = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'));
     const cwdPackageName = cwdPackageJSON.name;
     if (!cwdPackageJSON.name) {
-        return Promise.reject('当前目录 package.json 缺少 name 属性');
+        return Promise.reject('package.json is missing the "name" field');
     }
     if (packageName && packageName.length) {
         await addPackage(packageName, dev, cwdPackageName);
@@ -71,7 +71,7 @@ async function installPackage(to, packageName, dev = false) {
  * 安装 package.json 中的依赖
  */
 async function installPackageDependencies(scope) {
-    await (0, lerna_1.runLernaCommand)(['bootstrap', `--scope=${scope}`], `正在安装 ${scope} 的依赖`, '安装完成惹');
+    await (0, lerna_1.runLernaCommand)(['bootstrap', `--scope=${scope}`], `Installing dependencies for ${scope}`, 'Installation complete');
 }
 /**
  * 执行 lerna add <packageName>
@@ -82,5 +82,5 @@ async function addPackage(packageName, dev, scope) {
     if (!packageName) {
         return;
     }
-    await (0, lerna_1.runLernaCommand)(['add', packageName, `--scope=${scope}`].concat(dev ? ['--dev'] : []), `正在安装 ${packageName} 到当前目录`, '安装完成惹');
+    await (0, lerna_1.runLernaCommand)(['add', packageName, `--scope=${scope}`].concat(dev ? ['--dev'] : []), `Installing ${packageName} to current directory`, 'Installation complete');
 }

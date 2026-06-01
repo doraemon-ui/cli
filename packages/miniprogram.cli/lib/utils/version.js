@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkVersion = checkVersion;
+exports.checkTemplatesVersion = checkTemplatesVersion;
 const axios_1 = __importDefault(require("axios"));
 const chalk_1 = __importDefault(require("chalk"));
 async function checkVersion() {
@@ -22,11 +23,36 @@ async function checkVersion() {
                 return;
             }
             if (currentVersion !== latestVersion) {
-                console.log(chalk_1.default.yellow(`${packageName} 当前版本 ${currentVersion}，发现最新版本 ${latestVersion}，请及时更新~`));
+                console.log(chalk_1.default.yellow(`${packageName} is outdated (${currentVersion}). Latest version is ${latestVersion}, please update~`));
             }
         }
         catch (err) {
-            console.log(chalk_1.default.yellow('线上版本检查失败，请报告开发者'));
+            console.log(chalk_1.default.yellow('Failed to check for updates, please report to the developer'));
+            return;
+        }
+    }
+}
+async function checkTemplatesVersion() {
+    const packageJson = require('@doraemon-ui/miniprogram.templates/package.json');
+    const currentVersion = packageJson.version || '';
+    const packageName = packageJson.name || '';
+    if (currentVersion && packageName) {
+        try {
+            const { data: packageMetadata } = await axios_1.default.get(`https://registry.npmmirror.com/${packageName}`);
+            if (!packageMetadata || !packageMetadata['dist-tags']) {
+                return;
+            }
+            const distTags = packageMetadata['dist-tags'];
+            const latestVersion = distTags.latest || '';
+            if (!latestVersion) {
+                return;
+            }
+            if (currentVersion !== latestVersion) {
+                console.log(chalk_1.default.yellow(`${packageName} is outdated (${currentVersion}). Latest version is ${latestVersion}, please update~`));
+            }
+        }
+        catch (err) {
+            console.log(chalk_1.default.yellow('Failed to check for updates, please report to the developer'));
             return;
         }
     }

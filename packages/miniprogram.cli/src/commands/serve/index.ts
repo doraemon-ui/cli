@@ -56,8 +56,8 @@ export default function serve(api: PluginAPI, options: Options) {
       const { buildComponent } = require('@doraemon-ui/miniprogram.tools')
       return buildComponent({
         _: ['watch'],
-        onStartMsg: '启动开发服务...',
-        onCloseMsg: '构建完成惹',
+        onStartMsg: 'Starting dev server...',
+        onCloseMsg: 'Build complete',
         async onListening(eventName: 'start' | 'stop' | 'error') {
           if (eventName === 'stop') {
             if (args['build-npm']) {

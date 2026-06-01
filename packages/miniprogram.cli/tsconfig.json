@@ -17,5 +17,5 @@
     "skipLibCheck": true
   },
   "compileOnSave": false,
-  "exclude": ["node_modules/*", "miniprogram_dist/*", "templates/**"]
+  "exclude": ["node_modules/*", "miniprogram_dist/*"]
 }

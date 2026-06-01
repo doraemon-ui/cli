@@ -1,0 +1,23 @@
+{
+  "name": "@doraemon-ui/miniprogram.templates",
+  "private": false,
+  "version": "0.0.1",
+  "description": "Templates for doraemon-ui miniprogram development",
+  "author": "skyvow <724355924@qq.com>",
+  "license": "MIT",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "keywords": [
+    "doraemon-ui",
+    "miniprogram",
+    "templates"
+  ],
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "templates/"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,7 +1,7 @@
 import * as path from 'path'
 import * as fs from 'fs'
 import { PluginAPI } from './PluginAPI'
-import { checkVersion } from './utils/version'
+import { checkVersion, checkTemplatesVersion } from './utils/version'
 import { error } from './utils/error'
 import { version } from './version'
 import { defaults, Options } from './options'
@@ -162,7 +162,7 @@ export class Service {
       args._.shift()
       rawArgv.shift()
     }
-    await checkVersion()
+    await Promise.all([checkVersion(), checkTemplatesVersion()])
     const { fn } = command
     return fn(args, rawArgv)
   }

@@ -60,7 +60,7 @@ async function getComponentType() {
     return prompt({
         name: 'componentType',
         type: 'list',
-        message: '请选择要创建的组件类型：',
+        message: 'Select component type:',
         choices: [
             {
                 name: 'Miniprogram Lib',
@@ -99,7 +99,7 @@ async function getNpmScope() {
     let scope = await prompt({
         name: 'npmScope',
         type: 'list',
-        message: '请选择组件所属的 npm 域',
+        message: 'Select npm scope:',
         choices: [
             NpmScope.UI,
             // new inquirer.Separator(),
@@ -110,7 +110,7 @@ async function getNpmScope() {
     //   scope = await prompt({
     //     name: 'inputNpmScope',
     //     type: 'input',
-    //     message: '请输入组件所属的 npm 域'
+    //     message: 'Enter npm scope:'
     //   }).then(answer => answer.inputNpmScope)
     // }
     return scope;

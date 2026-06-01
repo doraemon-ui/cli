@@ -40,7 +40,8 @@ exports.create = create;
 const path = __importStar(require("path"));
 const chalk_1 = __importDefault(require("chalk"));
 const git_user_name_1 = __importDefault(require("git-user-name"));
-const config_1 = require("../../config");
+const miniprogram_templates_1 = require("@doraemon-ui/miniprogram.templates");
+const version_1 = require("../../version");
 const install_1 = require("../install");
 const copy_1 = require("../../utils/copy");
 const prompt_1 = require("../../utils/prompt");
@@ -171,7 +172,7 @@ async function rewriteDemo(rootName, author, packageJSON, cwd) {
  */
 async function create(cwd, name, componentType, npmScope) {
     if (!name) {
-        return Promise.reject('缺少 name 参数');
+        return Promise.reject('Missing "name" argument');
     }
     const type = componentType || (await (0, prompt_1.getComponentType)());
     switch (type) {
@@ -197,11 +198,11 @@ async function create(cwd, name, componentType, npmScope) {
  */
 async function createComponent(cwd, name, type, npmScope) {
     if (!name) {
-        return Promise.reject('缺少 name 参数');
+        return Promise.reject('Missing "name" argument');
     }
     const scope = npmScope || (await (0, prompt_1.getNpmScope)());
     const author = (0, git_user_name_1.default)();
-    const template = path.join(config_1.templatesDir, type);
+    const template = path.join(miniprogram_templates_1.templatesDir, type);
     const distDir = path.join(cwd, name);
     await (0, copy_1.copyFolder)(template, distDir);
     const packageName = `${scope}/${name}`;
@@ -212,9 +213,20 @@ async function createComponent(cwd, name, type, npmScope) {
         description: `${name.split('.').join(' ')} component for doraemon-ui`,
         author,
         keywords: [...packageJSON.keywords, ...name.split('.')],
+        devDependencies: {
+            ...packageJSON.devDependencies,
+            '@doraemon-ui/miniprogram.cli': version_1.version,
+        },
     }));
     await rewriteTypeDeclare(distDir, packageName, componentNameShort);
     await rewriteReadme(distDir, packageName, componentNameShort);
+    await (0, rewrite_1.rewrite)({
+        filePath: path.join(distDir, 'src'),
+        fileName: 'types.ts',
+        transformData(data) {
+            return renderFile(data, packageName, componentNameShort);
+        },
+    });
     await (0, rewrite_1.rewrite)({
         filePath: path.join(distDir, 'src'),
         fileName: 'index.ts',
@@ -256,9 +268,9 @@ async function createComponent(cwd, name, type, npmScope) {
  */
 async function createComponentSnippet(cwd, name, type) {
     if (!name) {
-        return Promise.reject('缺少 name 参数');
+        return Promise.reject('Missing "name" argument');
     }
-    const template = path.join(config_1.templatesDir, type);
+    const template = path.join(miniprogram_templates_1.templatesDir, type);
     const distDir = path.join(cwd);
     await (0, copy_1.copyFolder)(template, distDir, {
         rename(target) {
@@ -274,7 +286,7 @@ async function createComponentSnippet(cwd, name, type) {
             return renderFile(data, '', name);
         },
     });
-    console.log(chalk_1.default.green('安装完成惹'));
+    console.log(chalk_1.default.green('Installation complete'));
 }
 /**
  * 创建小程序库模板
@@ -287,11 +299,11 @@ async function createComponentSnippet(cwd, name, type) {
  */
 async function createLib(cwd, name, type, npmScope) {
     if (!name) {
-        return Promise.reject('缺少 name 参数');
+        return Promise.reject('Missing "name" argument');
     }
     const scope = npmScope || (await (0, prompt_1.getNpmScope)());
     const author = (0, git_user_name_1.default)();
-    const template = path.join(config_1.templatesDir, type);
+    const template = path.join(miniprogram_templates_1.templatesDir, type);
     const distDir = path.join(cwd, name);
     await (0, copy_1.copyFolder)(template, distDir);
     const packageName = `${scope}/${name}`;

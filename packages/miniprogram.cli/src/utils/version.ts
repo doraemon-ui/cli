@@ -17,10 +17,35 @@ export async function checkVersion() {
         return
       }
       if (currentVersion !== latestVersion) {
-        console.log(chalk.yellow(`${packageName} 当前版本 ${currentVersion}，发现最新版本 ${latestVersion}，请及时更新~`))
+        console.log(chalk.yellow(`${packageName} is outdated (${currentVersion}). Latest version is ${latestVersion}, please update~`))
       }
     } catch (err) {
-      console.log(chalk.yellow('线上版本检查失败，请报告开发者'))
+      console.log(chalk.yellow('Failed to check for updates, please report to the developer'))
+      return
+    }
+  }
+}
+
+export async function checkTemplatesVersion() {
+  const packageJson = require('@doraemon-ui/miniprogram.templates/package.json')
+  const currentVersion = packageJson.version || ''
+  const packageName = packageJson.name || ''
+  if (currentVersion && packageName) {
+    try {
+      const { data: packageMetadata } = await axios.get(`https://registry.npmmirror.com/${packageName}`)
+      if (!packageMetadata || !packageMetadata['dist-tags']) {
+        return
+      }
+      const distTags = packageMetadata['dist-tags']
+      const latestVersion = distTags.latest || ''
+      if (!latestVersion) {
+        return
+      }
+      if (currentVersion !== latestVersion) {
+        console.log(chalk.yellow(`${packageName} is outdated (${currentVersion}). Latest version is ${latestVersion}, please update~`))
+      }
+    } catch (err) {
+      console.log(chalk.yellow('Failed to check for updates, please report to the developer'))
       return
     }
   }

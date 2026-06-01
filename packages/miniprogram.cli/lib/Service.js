@@ -184,7 +184,7 @@ class Service {
             args._.shift();
             rawArgv.shift();
         }
-        await (0, version_1.checkVersion)();
+        await Promise.all([(0, version_1.checkVersion)(), (0, version_1.checkTemplatesVersion)()]);
         const { fn } = command;
         return fn(args, rawArgv);
     }

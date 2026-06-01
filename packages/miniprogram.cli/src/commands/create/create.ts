@@ -1,7 +1,8 @@
 import * as path from 'path'
 import chalk from 'chalk'
 import gitUsername from 'git-user-name'
-import { templatesDir } from '../../config'
+import { templatesDir } from '@doraemon-ui/miniprogram.templates'
+import { version as cliVersion } from '../../version'
 import { installPackage as install } from '../install'
 import { copyFolder } from '../../utils/copy'
 import { ComponentType, getComponentType, getNpmScope, NpmScope } from '../../utils/prompt'
@@ -144,7 +145,7 @@ async function rewriteDemo(rootName: string, author: string, packageJSON: Packag
  */
 export async function create(cwd: string, name: string, componentType: ComponentType, npmScope: NpmScope) {
   if (!name) {
-    return Promise.reject('缺少 name 参数')
+    return Promise.reject('Missing "name" argument')
   }
 
   const type = componentType || (await getComponentType())
@@ -172,7 +173,7 @@ export async function create(cwd: string, name: string, componentType: Component
  */
 async function createComponent(cwd: string, name: string, type: ComponentType, npmScope: NpmScope) {
   if (!name) {
-    return Promise.reject('缺少 name 参数')
+    return Promise.reject('Missing "name" argument')
   }
 
   const scope = npmScope || (await getNpmScope())
@@ -190,9 +191,20 @@ async function createComponent(cwd: string, name: string, type: ComponentType, n
     description: `${name.split('.').join(' ')} component for doraemon-ui`,
     author,
     keywords: [...(packageJSON.keywords as unknown as string[]), ...name.split('.')],
+    devDependencies: {
+      ...packageJSON.devDependencies,
+      '@doraemon-ui/miniprogram.cli': cliVersion,
+    },
   }))
   await rewriteTypeDeclare(distDir, packageName, componentNameShort)
   await rewriteReadme(distDir, packageName, componentNameShort)
+  await rewrite({
+    filePath: path.join(distDir, 'src'),
+    fileName: 'types.ts',
+    transformData(data) {
+      return renderFile(data, packageName, componentNameShort)
+    },
+  })
   await rewrite({
     filePath: path.join(distDir, 'src'),
     fileName: 'index.ts',
@@ -235,7 +247,7 @@ async function createComponent(cwd: string, name: string, type: ComponentType, n
  */
 async function createComponentSnippet(cwd: string, name: string, type: ComponentType) {
   if (!name) {
-    return Promise.reject('缺少 name 参数')
+    return Promise.reject('Missing "name" argument')
   }
 
   const template = path.join(templatesDir, type)
@@ -254,7 +266,7 @@ async function createComponentSnippet(cwd: string, name: string, type: Component
       return renderFile(data, '', name)
     },
   })
-  console.log(chalk.green('安装完成惹'))
+  console.log(chalk.green('Installation complete'))
 }
 
 /**
@@ -268,7 +280,7 @@ async function createComponentSnippet(cwd: string, name: string, type: Component
  */
 async function createLib(cwd: string, name: string, type: ComponentType, npmScope: NpmScope) {
   if (!name) {
-    return Promise.reject('缺少 name 参数')
+    return Promise.reject('Missing "name" argument')
   }
 
   const scope = npmScope || (await getNpmScope())

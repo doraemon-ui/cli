@@ -14,8 +14,8 @@ function build(api, options) {
         const { buildComponent } = require('@doraemon-ui/miniprogram.tools');
         return buildComponent({
             _: args.watch ? ['watch'] : ['build'],
-            onStartMsg: args.watch ? '正在监听文件改变' : '正在构建当前组件',
-            onCloseMsg: '构建完成惹',
+            onStartMsg: args.watch ? 'Watching for file changes' : 'Building component',
+            onCloseMsg: 'Build complete',
         });
     });
 }

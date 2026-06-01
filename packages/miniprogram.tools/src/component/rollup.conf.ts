@@ -268,11 +268,11 @@ interface ComponentConfig {
 }
 
 function onBuildStart(opts: ComponentConfig): void {
-  console.info(opts.onStartMsg || '正在构建当前组件')
+  console.info(opts.onStartMsg || 'Building component')
 }
 
 function onBuildEnd(opts: ComponentConfig): void {
-  console.info(opts.onCloseMsg || '构建完成惹')
+  console.info(opts.onCloseMsg || 'Build complete')
 }
 
 function onBuildError(err: Error): void {
@@ -384,7 +384,7 @@ function rollupBuild(opts: ComponentConfig = {}): Promise<RollupBuild | RollupWa
   const watchMode = tasks.includes('watch')
 
   if (watchMode) {
-    console.info(opts.onStartMsg || '正在启动 Rollup 监听模式')
+    console.info(opts.onStartMsg || 'Starting Rollup watch mode')
     compileStyles().catch(onBuildError)
     copyAssets().catch(onBuildError)
     return createWatcher(opts)

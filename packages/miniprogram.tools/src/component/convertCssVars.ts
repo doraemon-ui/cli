@@ -138,11 +138,7 @@ export function convertCssVars(
   // `var(--title-background-color)`
   // -> `var(--dora-sticky-title-background-color, var(--dora-color-step-10, #e6e6e6))`
   // -> `#e6e6e6`
-  const resolveValue = (
-    value: string,
-    localVarMap: Record<string, string>,
-    resolving = new Set<string>(),
-  ): string => {
+  const resolveValue = (value: string, localVarMap: Record<string, string>, resolving = new Set<string>()): string => {
     return replaceVarFunctions(value, ({ name, fallback }) => resolveVarReference(name, fallback, localVarMap, resolving))
   }
 
