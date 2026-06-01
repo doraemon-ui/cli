@@ -13,9 +13,7 @@ import copy from 'rollup-plugin-copy'
 import postcss from 'postcss'
 import autoprefixer from 'autoprefixer'
 import less from 'less'
-import cssbeautify from 'cssbeautify'
-import csstree from 'css-tree'
-import type { Atrule, CssNode, Declaration, ListItem } from 'css-tree'
+import { convertCssVars } from './convertCssVars'
 import util from '../shared/util'
 
 const buildDir = util.buildDir
@@ -119,123 +117,6 @@ function resolveComponentPath(base: string, str: string): string {
   }
 
   return pkg ? `${pkg.name}/${paths[paths.length - 1]}` : str
-}
-
-interface ConvertCssVarsOptions {
-  bodyNode: string
-  rootNode: string
-}
-
-interface ColorMapValue {
-  value: string
-  type?: string
-}
-
-function convertCssVars(css: string, options: ConvertCssVarsOptions = { bodyNode: 'page', rootNode: 'root' }): string {
-  const colorMap: Record<string, ColorMapValue> = {}
-  const ast = csstree.parse(css)
-
-  const checkIsDarkRule = (atrule: Atrule | null): boolean => {
-    let isDark = false
-    if (!atrule) return false
-    csstree.walk(atrule, {
-      visit: 'Feature' as never,
-      enter(node) {
-        if (node.name === 'prefers-color-scheme' && node.value && node.value.type === 'Identifier' && node.value.name === 'dark') {
-          isDark = true
-        }
-      },
-    })
-    return isDark
-  }
-
-  const checkIsRootTag = (astNode: CssNode | null | undefined, opts: ConvertCssVarsOptions): boolean => {
-    let isRoot = false
-    if (!astNode) return false
-    csstree.walk(astNode, {
-      enter(node: CssNode) {
-        if (
-          (node.type === 'TypeSelector' && node.name === opts.bodyNode) ||
-          (node.type === 'PseudoClassSelector' && node.name === opts.rootNode)
-        ) {
-          isRoot = true
-        }
-      },
-    })
-    return isRoot
-  }
-
-  const checkIsSingleRoot = (astNode: CssNode | null | undefined, opts: ConvertCssVarsOptions): boolean => {
-    let isSingle = false
-    if (!astNode) return false
-    csstree.walk(astNode, {
-      enter(node: CssNode, item: ListItem<CssNode>) {
-        if (
-          (node.type === 'TypeSelector' && node.name === opts.bodyNode) ||
-          (node.type === 'PseudoClassSelector' && node.name === opts.rootNode)
-        ) {
-          if (!item.prev && !item.next) {
-            isSingle = true
-          }
-        }
-      },
-    })
-    return isSingle
-  }
-
-  csstree.walk(ast, {
-    visit: 'Declaration',
-    enter(this: csstree.WalkContext, node: Declaration, item: ListItem<CssNode>, list: csstree.List<CssNode>) {
-      if (node.property && /^--/.test(node.property)) {
-        const isMediaDark = checkIsDarkRule(this.atrule as Atrule | null)
-        const isRootTag = checkIsRootTag(this.rule?.prelude, options)
-        const isSingle = checkIsSingleRoot(this.rule?.prelude, options)
-
-        if (isMediaDark && isRootTag) {
-          colorMap[`${node.property}_dark`] = { value: csstree.generate(node.value) }
-        } else if (!isMediaDark && isSingle) {
-          colorMap[node.property] = { value: csstree.generate(node.value) }
-        }
-      }
-    },
-  })
-
-  csstree.walk(ast, (node: CssNode, item: ListItem<CssNode>, list: csstree.List<CssNode>) => {
-    if (node.type === 'Declaration') {
-      const varNames: string[] = []
-      csstree.walk(node, (child: CssNode) => {
-        if (child.type === 'Function' && child.name === 'var') {
-          csstree.walk(child, (inner: CssNode) => {
-            if (inner.type === 'Identifier') {
-              varNames.push(inner.name)
-            }
-          })
-        }
-      })
-
-      if (varNames.length) {
-        let cssStyle = csstree.generate(node)
-        for (const name of varNames) {
-          if (colorMap[name]) {
-            const reg = new RegExp(`var\\(\\s*${name}\\s*\\)`, 'g')
-            cssStyle = cssStyle.replace(reg, colorMap[name].value.trim())
-          }
-        }
-        const rule: ListItem<CssNode> = {
-          prev: null,
-          next: null,
-          data: csstree.parse(cssStyle, { context: 'declaration' }),
-        }
-        list.insert(rule, item)
-      }
-    }
-  })
-
-  return cssbeautify(csstree.generate(ast), {
-    indent: '  ',
-    openbrace: 'end-of-line',
-    autosemicolon: true,
-  })
 }
 
 function injectCssImports(content: string): string {

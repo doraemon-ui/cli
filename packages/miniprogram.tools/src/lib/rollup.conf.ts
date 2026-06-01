@@ -5,6 +5,7 @@ import copy from 'rollup-plugin-copy'
 import replace from '@rollup/plugin-replace'
 import commonjs from '@rollup/plugin-commonjs'
 import typescript from '@rollup/plugin-typescript'
+import swc from '@rollup/plugin-swc'
 import type { Plugin as RollupPlugin } from 'rollup'
 import util from '../shared/util'
 
@@ -71,10 +72,25 @@ export function rollupConfig (opts: RollupConfig = {}): { inputOptions: RollupIn
     commonjs({
       include: /node_modules/,
     }),
-    typescript({
-      tslib: require('tslib'),
-      typescript: require('typescript'),
-      tsconfig,
+    // typescript({
+    //   tslib: require('tslib'),
+    //   typescript: require('typescript'),
+    //   tsconfig,
+    // }),
+    swc({
+      swc: {
+        jsc: {
+          parser: {
+            syntax: 'typescript',
+            decorators: true,
+          },
+          transform: {
+            legacyDecorator: true,
+            useDefineForClassFields: false,
+            decoratorMetadata: false,
+          },
+        },
+      },
     }),
   ]
   const specificConfig: { [key: string]: FormatConfig } = {

@@ -43,7 +43,7 @@ const plugin_node_resolve_1 = require("@rollup/plugin-node-resolve");
 const rollup_plugin_copy_1 = __importDefault(require("rollup-plugin-copy"));
 const plugin_replace_1 = __importDefault(require("@rollup/plugin-replace"));
 const plugin_commonjs_1 = __importDefault(require("@rollup/plugin-commonjs"));
-const plugin_typescript_1 = __importDefault(require("@rollup/plugin-typescript"));
+const plugin_swc_1 = __importDefault(require("@rollup/plugin-swc"));
 const util_1 = __importDefault(require("../shared/util"));
 const buildDir = util_1.default.buildDir;
 const rootDir = util_1.default.rootDir;
@@ -94,10 +94,25 @@ function rollupConfig(opts = {}) {
         (0, plugin_commonjs_1.default)({
             include: /node_modules/,
         }),
-        (0, plugin_typescript_1.default)({
-            tslib: require('tslib'),
-            typescript: require('typescript'),
-            tsconfig,
+        // typescript({
+        //   tslib: require('tslib'),
+        //   typescript: require('typescript'),
+        //   tsconfig,
+        // }),
+        (0, plugin_swc_1.default)({
+            swc: {
+                jsc: {
+                    parser: {
+                        syntax: 'typescript',
+                        decorators: true,
+                    },
+                    transform: {
+                        legacyDecorator: true,
+                        useDefineForClassFields: false,
+                        decoratorMetadata: false,
+                    },
+                },
+            },
         }),
     ];
     const specificConfig = {
