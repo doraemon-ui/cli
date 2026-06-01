@@ -37,7 +37,7 @@ exports.default = install;
 exports.installPackage = installPackage;
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
-const lerna_1 = require("../utils/lerna");
+const pnpm_1 = require("../utils/pnpm");
 function install(api, options) {
     api.registerCommand('install', {
         description: 'Install a single dependency to matched packages',
@@ -71,7 +71,7 @@ async function installPackage(to, packageName, dev = false) {
  * 安装 package.json 中的依赖
  */
 async function installPackageDependencies(scope) {
-    await (0, lerna_1.runLernaCommand)(['bootstrap', `--scope=${scope}`], `Installing dependencies for ${scope}`, 'Installation complete');
+    await (0, pnpm_1.runPnpmCommand)(['install', `--filter=${scope}`], `Installing dependencies for ${scope}`, 'Installation complete');
 }
 /**
  * 执行 lerna add <packageName>
@@ -82,5 +82,5 @@ async function addPackage(packageName, dev, scope) {
     if (!packageName) {
         return;
     }
-    await (0, lerna_1.runLernaCommand)(['add', packageName, `--scope=${scope}`].concat(dev ? ['--dev'] : []), `Installing ${packageName} to current directory`, 'Installation complete');
+    await (0, pnpm_1.runPnpmCommand)(['add', packageName, `--filter=${scope}`].concat(dev ? ['-D'] : []), `Installing ${packageName} to current directory`, 'Installation complete');
 }

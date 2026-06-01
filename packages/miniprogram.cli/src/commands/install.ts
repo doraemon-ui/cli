@@ -2,7 +2,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { PluginAPI } from '../PluginAPI'
 import { Options } from '../options'
-import { runLernaCommand } from '../utils/lerna'
+import { runPnpmCommand } from '../utils/pnpm'
 
 export default function install(api: PluginAPI, options: Options) {
   api.registerCommand(
@@ -42,7 +42,7 @@ export async function installPackage(to: string, packageName: string, dev: boole
  * 安装 package.json 中的依赖
  */
 async function installPackageDependencies(scope: string) {
-  await runLernaCommand(['bootstrap', `--scope=${scope}`], `Installing dependencies for ${scope}`, 'Installation complete')
+  await runPnpmCommand(['install', `--filter=${scope}`], `Installing dependencies for ${scope}`, 'Installation complete')
 }
 
 /**
@@ -54,8 +54,8 @@ async function addPackage(packageName: string, dev: boolean, scope: string) {
   if (!packageName) {
     return
   }
-  await runLernaCommand(
-    ['add', packageName, `--scope=${scope}`].concat(dev ? ['--dev'] : []),
+  await runPnpmCommand(
+    ['add', packageName, `--filter=${scope}`].concat(dev ? ['-D'] : []),
     `Installing ${packageName} to current directory`,
     'Installation complete',
   )
