@@ -35,6 +35,11 @@ export interface CssPluginConfig {
   entry: string | string[]
   pxTransform?: {
     designWidth: number
+    deviceRatio: Record<number, number>
+    unit: string
+    replaceUnit: string
+    unitPrecision: number
+    onePxTransform: boolean
   }
 }
 
@@ -54,7 +59,17 @@ const defaultConfig: Required<DoraConfig> = {
   cssPlugin: {
     entry: ['./src/**/*.less'],
     pxTransform: {
-      designWidth: 375,
+      designWidth: 750,
+      deviceRatio: {
+        375: 2 / 1,
+        640: 2.34 / 2,
+        750: 1,
+        828: 1.81 / 2,
+      },
+      unit: 'rpx',
+      replaceUnit: 'px',
+      unitPrecision: 5,
+      onePxTransform: true,
     },
   },
 }
@@ -63,7 +78,22 @@ let userConfig: DoraConfig = {}
 if (fs.existsSync(doraConfig)) {
   userConfig = require(doraConfig) as DoraConfig
 }
-const config: Required<DoraConfig> = Object.assign({}, defaultConfig, userConfig)
+const config: Required<DoraConfig> = {
+  ...defaultConfig,
+  ...userConfig,
+  copyPlugin: {
+    ...defaultConfig.copyPlugin,
+    ...userConfig.copyPlugin,
+  },
+  cssPlugin: {
+    ...defaultConfig.cssPlugin,
+    ...userConfig.cssPlugin,
+    pxTransform: {
+      ...defaultConfig.cssPlugin.pxTransform,
+      ...userConfig.cssPlugin?.pxTransform,
+    },
+  },
+}
 
 interface UsingComponents {
   usingComponents?: Record<string, string>
@@ -123,7 +153,7 @@ function transformUsingComponents(content: string, filePath: string, platform: T
 function resolveComponentPath(base: string, str: string): string {
   const paths = str.split('/')
   let i = paths.length - 1
-      let pkg: { name: string } | undefined
+  let pkg: { name: string } | undefined
 
   while (i > 0) {
     const packageJSONPath = path.join(base, paths.slice(0, i).join('/'), 'package.json')
@@ -160,6 +190,31 @@ function injectCssImports(content: string): string {
   }
 
   return result
+}
+
+function transformPxToRpx(content: string): string {
+  const options = config.cssPlugin.pxTransform
+  const ratio = options.deviceRatio[options.designWidth] || 1
+  const pxRegExp = new RegExp(`"[^"]+"|'[^']+'|url\\([^\\)]+\\)|(\\d*\\.?\\d+)${options.replaceUnit}`, 'g')
+
+  return content.replace(pxRegExp, (match, value) => {
+    if (!value) {
+      return match
+    }
+
+    if (value.toString() === '1' && !options.onePxTransform) {
+      return match
+    }
+
+    const pixels = parseFloat(value) * ratio
+    const converted = parseFloat(pixels.toFixed(options.unitPrecision))
+
+    if (converted === 0) {
+      return '0'
+    }
+
+    return `${converted}${options.unit}`
+  })
 }
 
 function transformTemplateForToutiao(content: string): string {
@@ -211,8 +266,9 @@ async function compileStyles(): Promise<void> {
       })
       const processed = await postcss([autoprefixer()]).process(lessResult.css, { from: undefined })
       let transformed = processed.css
-      transformed = convertCssVars(transformed)
       transformed = injectCssImports(transformed)
+      transformed = convertCssVars(transformed)
+      transformed = transformPxToRpx(transformed)
       await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform))
     }),
   )
@@ -232,15 +288,14 @@ async function copyAssets(): Promise<void> {
 
       if (/\.wxml$/i.test(file)) {
         const content = fs.readFileSync(file, 'utf8')
-        await writeContentForPlatforms(file, (platform) =>
-          platform.name === 'tt' ? transformTemplateForToutiao(content) : content,
-        )
+        await writeContentForPlatforms(file, (platform) => (platform.name === 'tt' ? transformTemplateForToutiao(content) : content))
         return
       }
 
       if (/\.wxss$/i.test(file)) {
         const content = fs.readFileSync(file, 'utf8')
-        await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(content, platform))
+        const transformed = transformPxToRpx(content)
+        await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform))
       }
     }),
   )

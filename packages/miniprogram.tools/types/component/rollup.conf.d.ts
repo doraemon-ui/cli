@@ -6,6 +6,11 @@ export interface CssPluginConfig {
     entry: string | string[];
     pxTransform?: {
         designWidth: number;
+        deviceRatio: Record<number, number>;
+        unit: string;
+        replaceUnit: string;
+        unitPrecision: number;
+        onePxTransform: boolean;
     };
 }
 export interface DoraConfig {

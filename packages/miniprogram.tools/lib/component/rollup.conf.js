@@ -68,7 +68,17 @@ const defaultConfig = {
     cssPlugin: {
         entry: ['./src/**/*.less'],
         pxTransform: {
-            designWidth: 375,
+            designWidth: 750,
+            deviceRatio: {
+                375: 2 / 1,
+                640: 2.34 / 2,
+                750: 1,
+                828: 1.81 / 2,
+            },
+            unit: 'rpx',
+            replaceUnit: 'px',
+            unitPrecision: 5,
+            onePxTransform: true,
         },
     },
 };
@@ -76,7 +86,22 @@ let userConfig = {};
 if (fs.existsSync(doraConfig)) {
     userConfig = require(doraConfig);
 }
-const config = Object.assign({}, defaultConfig, userConfig);
+const config = {
+    ...defaultConfig,
+    ...userConfig,
+    copyPlugin: {
+        ...defaultConfig.copyPlugin,
+        ...userConfig.copyPlugin,
+    },
+    cssPlugin: {
+        ...defaultConfig.cssPlugin,
+        ...userConfig.cssPlugin,
+        pxTransform: {
+            ...defaultConfig.cssPlugin.pxTransform,
+            ...userConfig.cssPlugin?.pxTransform,
+        },
+    },
+};
 const TARGET_PLATFORMS = [
     {
         name: 'wx',
@@ -149,6 +174,25 @@ function injectCssImports(content) {
     }
     return result;
 }
+function transformPxToRpx(content) {
+    const options = config.cssPlugin.pxTransform;
+    const ratio = options.deviceRatio[options.designWidth] || 1;
+    const pxRegExp = new RegExp(`"[^"]+"|'[^']+'|url\\([^\\)]+\\)|(\\d*\\.?\\d+)${options.replaceUnit}`, 'g');
+    return content.replace(pxRegExp, (match, value) => {
+        if (!value) {
+            return match;
+        }
+        if (value.toString() === '1' && !options.onePxTransform) {
+            return match;
+        }
+        const pixels = parseFloat(value) * ratio;
+        const converted = parseFloat(pixels.toFixed(options.unitPrecision));
+        if (converted === 0) {
+            return '0';
+        }
+        return `${converted}${options.unit}`;
+    });
+}
 function transformTemplateForToutiao(content) {
     return content.replace(/(^|[\s<])wx:(for(?:-index|-item)?|key|if|elif|else)(?=[\s=>])/g, '$1tt:$2');
 }
@@ -189,8 +233,9 @@ async function compileStyles() {
         });
         const processed = await (0, postcss_1.default)([(0, autoprefixer_1.default)()]).process(lessResult.css, { from: undefined });
         let transformed = processed.css;
-        transformed = (0, convertCssVars_1.convertCssVars)(transformed);
         transformed = injectCssImports(transformed);
+        transformed = (0, convertCssVars_1.convertCssVars)(transformed);
+        transformed = transformPxToRpx(transformed);
         await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform));
     }));
 }
@@ -205,12 +250,13 @@ async function copyAssets() {
         }
         if (/\.wxml$/i.test(file)) {
             const content = fs.readFileSync(file, 'utf8');
-            await writeContentForPlatforms(file, (platform) => platform.name === 'tt' ? transformTemplateForToutiao(content) : content);
+            await writeContentForPlatforms(file, (platform) => (platform.name === 'tt' ? transformTemplateForToutiao(content) : content));
             return;
         }
         if (/\.wxss$/i.test(file)) {
             const content = fs.readFileSync(file, 'utf8');
-            await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(content, platform));
+            const transformed = transformPxToRpx(content);
+            await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform));
         }
     }));
 }
