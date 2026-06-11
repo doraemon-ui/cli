@@ -11,7 +11,7 @@ import util from '../shared/util'
 
 const buildDir = util.buildDir
 const rootDir = util.rootDir
-const extensions: string[] = ['.js', '.ts']
+const extensions: string[] = ['.js', '.ts', '.tsx', '.jsx']
 
 const tsconfig: string = fs.existsSync(path.join(buildDir, 'tsconfig.json')) ?
   path.join(buildDir, 'tsconfig.json') :

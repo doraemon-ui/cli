@@ -47,7 +47,7 @@ const plugin_swc_1 = __importDefault(require("@rollup/plugin-swc"));
 const util_1 = __importDefault(require("../shared/util"));
 const buildDir = util_1.default.buildDir;
 const rootDir = util_1.default.rootDir;
-const extensions = ['.js', '.ts'];
+const extensions = ['.js', '.ts', '.tsx', '.jsx'];
 const tsconfig = fs.existsSync(path.join(buildDir, 'tsconfig.json')) ?
     path.join(buildDir, 'tsconfig.json') :
     path.join(rootDir, 'tsconfig.json');
