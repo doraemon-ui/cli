@@ -59,6 +59,26 @@ const doraConfig = fs.existsSync(path.join(buildDir, 'dora.config.js'))
 const tsconfig = fs.existsSync(path.join(buildDir, 'tsconfig.json'))
     ? path.join(buildDir, 'tsconfig.json')
     : path.join(rootDir, 'tsconfig.json');
+const defaultPlatforms = {
+    wx: {
+        name: 'wx',
+        outputDir: 'wx-npm',
+        markupExt: '.wxml',
+        styleExt: '.wxss',
+        runtimeStyleImport: '../../@doraemon-ui/style/index.wxss',
+        jsonUsingComponentsPrefix: '',
+        templateAttributePrefix: 'wx',
+    },
+    tt: {
+        name: 'tt',
+        outputDir: 'tt-npm',
+        markupExt: '.ttml',
+        styleExt: '.ttss',
+        runtimeStyleImport: '../../../../@doraemon-ui/style/index.ttss',
+        jsonUsingComponentsPrefix: 'ext://',
+        templateAttributePrefix: 'tt',
+    },
+};
 const defaultConfig = {
     entry: ['./src/**/*.ts', '!./src/**/*.d.ts', '!./src/**/types.ts'],
     outputDir: './miniprogram_dist',
@@ -81,11 +101,23 @@ const defaultConfig = {
             onePxTransform: true,
         },
     },
+    platforms: defaultPlatforms,
 };
 let userConfig = {};
 if (fs.existsSync(doraConfig)) {
     userConfig = require(doraConfig);
 }
+const resolvedPlatforms = Object.fromEntries(Object.entries({
+    ...defaultConfig.platforms,
+    ...userConfig.platforms,
+}).map(([name, platform]) => [
+    name,
+    {
+        ...defaultConfig.platforms[name],
+        ...platform,
+        name,
+    },
+]));
 const config = {
     ...defaultConfig,
     ...userConfig,
@@ -101,21 +133,9 @@ const config = {
             ...userConfig.cssPlugin?.pxTransform,
         },
     },
+    platforms: resolvedPlatforms,
 };
-const TARGET_PLATFORMS = [
-    {
-        name: 'wx',
-        outputDir: 'wx-npm',
-        markupExt: '.wxml',
-        styleExt: '.wxss',
-    },
-    {
-        name: 'tt',
-        outputDir: 'tt-npm',
-        markupExt: '.ttml',
-        styleExt: '.ttss',
-    },
-];
+const TARGET_PLATFORMS = Object.values(resolvedPlatforms);
 function ensureDirectoryExists(filePath) {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
@@ -135,7 +155,7 @@ function transformUsingComponents(content, filePath, platform) {
     Object.keys(value.usingComponents).forEach((key) => {
         const componentPath = value.usingComponents[key];
         const resolvedPath = resolveComponentPath(fileDir, componentPath);
-        usingComponents[key] = platform.name === 'tt' ? addExtPrefix(resolvedPath) : resolvedPath;
+        usingComponents[key] = addPrefix(resolvedPath, platform.jsonUsingComponentsPrefix);
     });
     return JSON.stringify(Object.assign({}, value, { usingComponents }), null, 2);
 }
@@ -153,26 +173,11 @@ function resolveComponentPath(base, str) {
     }
     return pkg ? `${pkg.name}/${paths[paths.length - 1]}` : str;
 }
-function addExtPrefix(componentPath) {
-    if (/^(?:ext:\/\/|\.{1,2}\/|\/)/.test(componentPath)) {
+function addPrefix(componentPath, prefix) {
+    if (!prefix || /^(?:[a-z]+:\/\/|\.{1,2}\/|\/)/i.test(componentPath)) {
         return componentPath;
     }
-    return `ext://${componentPath}`;
-}
-function injectCssImports(content) {
-    const INJECT_REG = /\/\*! inject:wxss:(.*) \*\//;
-    const END_INJECT_REG = /\/\*! endinject \*\//;
-    let result = content;
-    let startMatch = result.match(INJECT_REG);
-    let endMatch = result.match(END_INJECT_REG);
-    while (startMatch && endMatch) {
-        const startIndex = startMatch.index || 0;
-        const endIndex = endMatch.index || 0;
-        result = result.slice(0, startIndex) + `@import '${startMatch[1]}';\n` + result.slice(endIndex + endMatch[0].length);
-        startMatch = result.match(INJECT_REG);
-        endMatch = result.match(END_INJECT_REG);
-    }
-    return result;
+    return `${prefix}${componentPath}`;
 }
 function transformPxToRpx(content) {
     const options = config.cssPlugin.pxTransform;
@@ -193,14 +198,31 @@ function transformPxToRpx(content) {
         return `${converted}${options.unit}`;
     });
 }
-function transformTemplateForToutiao(content) {
-    return content.replace(/(^|[\s<])wx:(for(?:-index|-item)?|key|if|elif|else)(?=[\s=>])/g, '$1tt:$2');
-}
-function transformStyleForPlatform(content, platform) {
-    if (platform.name === 'wx') {
+function transformTemplateForPlatform(content, platform) {
+    if (platform.templateAttributePrefix === 'wx') {
         return content;
     }
-    return content.replace(/(@import\s+['"][^'"]+)\.wxss(['"]\s*;?)/g, '$1.ttss$2');
+    return content.replace(/(^|[\s<])wx:(for(?:-index|-item)?|key|if|elif|else)(?=[\s=>])/g, `$1${platform.templateAttributePrefix}:$2`);
+}
+function injectCssImports(content, platform) {
+    const runtimeImport = `@import "${platform.runtimeStyleImport}";`;
+    const INJECT_REG = /\/\*!\s*inject:runtime-style\s*\*\//;
+    const END_INJECT_REG = /\/\*!\s*endinject\s*\*\//;
+    let result = content;
+    let startMatch = result.match(INJECT_REG);
+    let endMatch = result.match(END_INJECT_REG);
+    while (startMatch && endMatch) {
+        const startIndex = startMatch.index || 0;
+        const endIndex = endMatch.index || 0;
+        result = result.slice(0, startIndex) + `${runtimeImport}\n` + result.slice(endIndex + endMatch[0].length);
+        startMatch = result.match(INJECT_REG);
+        endMatch = result.match(END_INJECT_REG);
+    }
+    return result;
+}
+function transformStyleForPlatform(content, platform) {
+    const transformed = content.replace(/(@import\s+['"][^'"]+)\.wxss(['"]\s*;?)/g, `$1${platform.styleExt}$2`);
+    return injectCssImports(transformed, platform);
 }
 function getOutputPath(file, platform, ext) {
     const relativePath = path.relative(path.join(buildDir, 'src'), file);
@@ -233,7 +255,6 @@ async function compileStyles() {
         });
         const processed = await (0, postcss_1.default)([(0, autoprefixer_1.default)()]).process(lessResult.css, { from: undefined });
         let transformed = processed.css;
-        transformed = injectCssImports(transformed);
         transformed = (0, convertCssVars_1.convertCssVars)(transformed);
         transformed = transformPxToRpx(transformed);
         await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform));
@@ -250,7 +271,7 @@ async function copyAssets() {
         }
         if (/\.wxml$/i.test(file)) {
             const content = fs.readFileSync(file, 'utf8');
-            await writeContentForPlatforms(file, (platform) => (platform.name === 'tt' ? transformTemplateForToutiao(content) : content));
+            await writeContentForPlatforms(file, (platform) => transformTemplateForPlatform(content, platform));
             return;
         }
         if (/\.wxss$/i.test(file)) {
