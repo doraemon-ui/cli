@@ -17,7 +17,7 @@ import util from '../shared/util'
 
 const buildDir = util.buildDir
 const rootDir = util.rootDir
-const extensions: string[] = ['.js', '.ts']
+const extensions: string[] = ['.js', '.ts', '.jsx', '.tsx']
 
 const doraConfig = fs.existsSync(path.join(buildDir, 'dora.config.js'))
   ? path.join(buildDir, 'dora.config.js')
@@ -48,28 +48,6 @@ export interface DoraConfig {
   outputDir?: string
   copyPlugin?: CopyPluginConfig
   cssPlugin?: CssPluginConfig
-  platforms?: Record<string, Partial<TargetPlatform>>
-}
-
-const defaultPlatforms: Record<string, TargetPlatform> = {
-  wx: {
-    name: 'wx',
-    outputDir: 'wx-npm',
-    markupExt: '.wxml',
-    styleExt: '.wxss',
-    runtimeStyleImport: '../../@doraemon-ui/style/index.wxss',
-    jsonUsingComponentsPrefix: '',
-    templateAttributePrefix: 'wx',
-  },
-  tt: {
-    name: 'tt',
-    outputDir: 'tt-npm',
-    markupExt: '.ttml',
-    styleExt: '.ttss',
-    runtimeStyleImport: '../../../../@doraemon-ui/style/index.ttss',
-    jsonUsingComponentsPrefix: 'ext://',
-    templateAttributePrefix: 'tt',
-  },
 }
 
 const defaultConfig: Required<DoraConfig> = {
@@ -94,26 +72,12 @@ const defaultConfig: Required<DoraConfig> = {
       onePxTransform: true,
     },
   },
-  platforms: defaultPlatforms,
 }
 
 let userConfig: DoraConfig = {}
 if (fs.existsSync(doraConfig)) {
   userConfig = require(doraConfig) as DoraConfig
 }
-const resolvedPlatforms = Object.fromEntries(
-  Object.entries({
-    ...defaultConfig.platforms,
-    ...userConfig.platforms,
-  }).map(([name, platform]) => [
-    name,
-    {
-      ...defaultConfig.platforms[name as keyof typeof defaultConfig.platforms],
-      ...platform,
-      name,
-    },
-  ]),
-) as Record<string, TargetPlatform>
 
 const config: Required<DoraConfig> = {
   ...defaultConfig,
@@ -130,24 +94,7 @@ const config: Required<DoraConfig> = {
       ...userConfig.cssPlugin?.pxTransform,
     },
   },
-  platforms: resolvedPlatforms,
 }
-
-interface UsingComponents {
-  usingComponents?: Record<string, string>
-}
-
-interface TargetPlatform {
-  name: string
-  outputDir: string
-  markupExt: '.wxml' | '.ttml'
-  styleExt: '.wxss' | '.ttss'
-  runtimeStyleImport: string
-  jsonUsingComponentsPrefix: string
-  templateAttributePrefix: string
-}
-
-const TARGET_PLATFORMS: TargetPlatform[] = Object.values(resolvedPlatforms)
 
 function ensureDirectoryExists(filePath: string): void {
   const dir = path.dirname(filePath)
@@ -158,48 +105,6 @@ function ensureDirectoryExists(filePath: string): void {
 
 function normalizePatterns(patterns: string | string[]): string[] {
   return Array.isArray(patterns) ? patterns : [patterns]
-}
-
-function transformUsingComponents(content: string, filePath: string, platform: TargetPlatform): string {
-  const fileDir = path.dirname(filePath)
-  const value = JSON.parse(content) as UsingComponents
-
-  if (!value.usingComponents) {
-    return JSON.stringify(value, null, 2)
-  }
-
-  const usingComponents: Record<string, string> = {}
-  Object.keys(value.usingComponents).forEach((key) => {
-    const componentPath = value.usingComponents![key]
-    const resolvedPath = resolveComponentPath(fileDir, componentPath)
-    usingComponents[key] = addPrefix(resolvedPath, platform.jsonUsingComponentsPrefix)
-  })
-
-  return JSON.stringify(Object.assign({}, value, { usingComponents }), null, 2)
-}
-
-function resolveComponentPath(base: string, str: string): string {
-  const paths = str.split('/')
-  let i = paths.length - 1
-  let pkg: { name: string } | undefined
-
-  while (i > 0) {
-    const packageJSONPath = path.join(base, paths.slice(0, i).join('/'), 'package.json')
-    if (fs.existsSync(packageJSONPath)) {
-      pkg = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8')) as { name: string }
-      break
-    }
-    i--
-  }
-
-  return pkg ? `${pkg.name}/${paths[paths.length - 1]}` : str
-}
-
-function addPrefix(componentPath: string, prefix: string): string {
-  if (!prefix || /^(?:[a-z]+:\/\/|\.{1,2}\/|\/)/i.test(componentPath)) {
-    return componentPath
-  }
-  return `${prefix}${componentPath}`
 }
 
 function transformPxToRpx(content: string): string {
@@ -227,15 +132,7 @@ function transformPxToRpx(content: string): string {
   })
 }
 
-function transformTemplateForPlatform(content: string, platform: TargetPlatform): string {
-  if (platform.templateAttributePrefix === 'wx') {
-    return content
-  }
-  return content.replace(/(^|[\s<])wx:(for(?:-index|-item)?|key|if|elif|else)(?=[\s=>])/g, `$1${platform.templateAttributePrefix}:$2`)
-}
-
-function injectCssImports(content: string, platform: TargetPlatform): string {
-  const runtimeImport = `@import "${platform.runtimeStyleImport}";`
+function injectCssImports(content: string): string {
   const INJECT_REG = /\/\*!\s*inject:runtime-style\s*\*\//
   const END_INJECT_REG = /\/\*!\s*endinject\s*\*\//
   let result = content
@@ -245,7 +142,7 @@ function injectCssImports(content: string, platform: TargetPlatform): string {
   while (startMatch && endMatch) {
     const startIndex = startMatch.index || 0
     const endIndex = endMatch.index || 0
-    result = result.slice(0, startIndex) + `${runtimeImport}\n` + result.slice(endIndex + endMatch[0].length)
+    result = result.slice(0, startIndex) + result.slice(endIndex + endMatch[0].length)
     startMatch = result.match(INJECT_REG)
     endMatch = result.match(END_INJECT_REG)
   }
@@ -253,34 +150,9 @@ function injectCssImports(content: string, platform: TargetPlatform): string {
   return result
 }
 
-function transformStyleForPlatform(content: string, platform: TargetPlatform): string {
-  const transformed = content.replace(/(@import\s+['"][^'"]+)\.wxss(['"]\s*;?)/g, `$1${platform.styleExt}$2`)
-  return injectCssImports(transformed, platform)
-}
-
-function getOutputPath(file: string, platform: TargetPlatform, ext: string): string {
+function getOutputPath(file: string, ext: string): string {
   const relativePath = path.relative(path.join(buildDir, 'src'), file)
-  return path.join(buildDir, config.outputDir, platform.outputDir, relativePath.replace(/\.(ts|less|json|wxml|wxss)$/, ext))
-}
-
-async function writeContentForPlatforms(file: string, getContent: (platform: TargetPlatform) => string): Promise<void> {
-  await Promise.all(
-    TARGET_PLATFORMS.map(async (platform) => {
-      const outputFile = getOutputPath(file, platform, getOutputExtension(file, platform))
-      ensureDirectoryExists(outputFile)
-      fs.writeFileSync(outputFile, getContent(platform), 'utf8')
-    }),
-  )
-}
-
-function getOutputExtension(file: string, platform: TargetPlatform): string {
-  if (/\.wxml$/i.test(file)) {
-    return platform.markupExt
-  }
-  if (/\.(less|wxss)$/i.test(file)) {
-    return platform.styleExt
-  }
-  return path.extname(file)
+  return path.join(buildDir, config.outputDir, relativePath.replace(/\.(ts|less|json|wxml|wxss)$/, ext))
 }
 
 async function compileStyles(): Promise<void> {
@@ -298,7 +170,11 @@ async function compileStyles(): Promise<void> {
       let transformed = processed.css
       transformed = convertCssVars(transformed)
       transformed = transformPxToRpx(transformed)
-      await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform))
+      transformed = injectCssImports(transformed)
+
+      const outputFile = getOutputPath(file, '.wxss')
+      ensureDirectoryExists(outputFile)
+      fs.writeFileSync(outputFile, transformed, 'utf8')
     }),
   )
 }
@@ -309,23 +185,16 @@ async function copyAssets(): Promise<void> {
 
   await Promise.all(
     files.map(async (file) => {
-      if (/\.json$/i.test(file)) {
-        const content = fs.readFileSync(file, 'utf8')
-        await writeContentForPlatforms(file, (platform) => transformUsingComponents(content, file, platform))
-        return
-      }
-
-      if (/\.wxml$/i.test(file)) {
-        const content = fs.readFileSync(file, 'utf8')
-        await writeContentForPlatforms(file, (platform) => transformTemplateForPlatform(content, platform))
-        return
-      }
+      const outputFile = getOutputPath(file, path.extname(file))
+      ensureDirectoryExists(outputFile)
 
       if (/\.wxss$/i.test(file)) {
         const content = fs.readFileSync(file, 'utf8')
-        const transformed = transformPxToRpx(content)
-        await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform))
+        fs.writeFileSync(outputFile, injectCssImports(transformPxToRpx(content)), 'utf8')
+        return
       }
+
+      fs.copyFileSync(file, outputFile)
     }),
   )
 }
@@ -394,16 +263,14 @@ async function compileScripts(): Promise<void> {
     },
   })
 
-  for (const platform of TARGET_PLATFORMS) {
-    await bundle.write({
-      dir: path.join(buildDir, config.outputDir, platform.outputDir),
-      format: 'esm',
-      preserveModules: true,
-      preserveModulesRoot: path.join(buildDir, 'src'),
-      sourcemap: false,
-      banner: util.banner(),
-    })
-  }
+  await bundle.write({
+    dir: path.join(buildDir, config.outputDir),
+    format: 'esm',
+    preserveModules: true,
+    preserveModulesRoot: path.join(buildDir, 'src'),
+    sourcemap: false,
+    banner: util.banner(),
+  })
   await bundle.close()
 }
 
@@ -452,14 +319,14 @@ async function createWatcher(opts: ComponentConfig = {}): Promise<RollupWatcher>
     input: inputFiles,
     external: [/@doraemon-ui/],
     plugins: [...getCommonPlugins()],
-    output: TARGET_PLATFORMS.map((platform) => ({
-      dir: path.join(buildDir, config.outputDir, platform.outputDir),
+    output: {
+      dir: path.join(buildDir, config.outputDir),
       format: 'esm',
       preserveModules: true,
       preserveModulesRoot: path.join(buildDir, 'src'),
       sourcemap: false,
       banner: util.banner(),
-    })),
+    },
     watch: {
       include: [path.join(buildDir, 'src', '**')],
     },

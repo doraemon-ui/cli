@@ -52,33 +52,13 @@ const convertCssVars_1 = require("./convertCssVars");
 const util_1 = __importDefault(require("../shared/util"));
 const buildDir = util_1.default.buildDir;
 const rootDir = util_1.default.rootDir;
-const extensions = ['.js', '.ts'];
+const extensions = ['.js', '.ts', '.jsx', '.tsx'];
 const doraConfig = fs.existsSync(path.join(buildDir, 'dora.config.js'))
     ? path.join(buildDir, 'dora.config.js')
     : path.join(rootDir, 'dora.config.js');
 const tsconfig = fs.existsSync(path.join(buildDir, 'tsconfig.json'))
     ? path.join(buildDir, 'tsconfig.json')
     : path.join(rootDir, 'tsconfig.json');
-const defaultPlatforms = {
-    wx: {
-        name: 'wx',
-        outputDir: 'wx-npm',
-        markupExt: '.wxml',
-        styleExt: '.wxss',
-        runtimeStyleImport: '../../@doraemon-ui/style/index.wxss',
-        jsonUsingComponentsPrefix: '',
-        templateAttributePrefix: 'wx',
-    },
-    tt: {
-        name: 'tt',
-        outputDir: 'tt-npm',
-        markupExt: '.ttml',
-        styleExt: '.ttss',
-        runtimeStyleImport: '../../../../@doraemon-ui/style/index.ttss',
-        jsonUsingComponentsPrefix: 'ext://',
-        templateAttributePrefix: 'tt',
-    },
-};
 const defaultConfig = {
     entry: ['./src/**/*.ts', '!./src/**/*.d.ts', '!./src/**/types.ts'],
     outputDir: './miniprogram_dist',
@@ -101,23 +81,11 @@ const defaultConfig = {
             onePxTransform: true,
         },
     },
-    platforms: defaultPlatforms,
 };
 let userConfig = {};
 if (fs.existsSync(doraConfig)) {
     userConfig = require(doraConfig);
 }
-const resolvedPlatforms = Object.fromEntries(Object.entries({
-    ...defaultConfig.platforms,
-    ...userConfig.platforms,
-}).map(([name, platform]) => [
-    name,
-    {
-        ...defaultConfig.platforms[name],
-        ...platform,
-        name,
-    },
-]));
 const config = {
     ...defaultConfig,
     ...userConfig,
@@ -133,9 +101,7 @@ const config = {
             ...userConfig.cssPlugin?.pxTransform,
         },
     },
-    platforms: resolvedPlatforms,
 };
-const TARGET_PLATFORMS = Object.values(resolvedPlatforms);
 function ensureDirectoryExists(filePath) {
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
@@ -144,40 +110,6 @@ function ensureDirectoryExists(filePath) {
 }
 function normalizePatterns(patterns) {
     return Array.isArray(patterns) ? patterns : [patterns];
-}
-function transformUsingComponents(content, filePath, platform) {
-    const fileDir = path.dirname(filePath);
-    const value = JSON.parse(content);
-    if (!value.usingComponents) {
-        return JSON.stringify(value, null, 2);
-    }
-    const usingComponents = {};
-    Object.keys(value.usingComponents).forEach((key) => {
-        const componentPath = value.usingComponents[key];
-        const resolvedPath = resolveComponentPath(fileDir, componentPath);
-        usingComponents[key] = addPrefix(resolvedPath, platform.jsonUsingComponentsPrefix);
-    });
-    return JSON.stringify(Object.assign({}, value, { usingComponents }), null, 2);
-}
-function resolveComponentPath(base, str) {
-    const paths = str.split('/');
-    let i = paths.length - 1;
-    let pkg;
-    while (i > 0) {
-        const packageJSONPath = path.join(base, paths.slice(0, i).join('/'), 'package.json');
-        if (fs.existsSync(packageJSONPath)) {
-            pkg = JSON.parse(fs.readFileSync(packageJSONPath, 'utf8'));
-            break;
-        }
-        i--;
-    }
-    return pkg ? `${pkg.name}/${paths[paths.length - 1]}` : str;
-}
-function addPrefix(componentPath, prefix) {
-    if (!prefix || /^(?:[a-z]+:\/\/|\.{1,2}\/|\/)/i.test(componentPath)) {
-        return componentPath;
-    }
-    return `${prefix}${componentPath}`;
 }
 function transformPxToRpx(content) {
     const options = config.cssPlugin.pxTransform;
@@ -198,14 +130,7 @@ function transformPxToRpx(content) {
         return `${converted}${options.unit}`;
     });
 }
-function transformTemplateForPlatform(content, platform) {
-    if (platform.templateAttributePrefix === 'wx') {
-        return content;
-    }
-    return content.replace(/(^|[\s<])wx:(for(?:-index|-item)?|key|if|elif|else)(?=[\s=>])/g, `$1${platform.templateAttributePrefix}:$2`);
-}
-function injectCssImports(content, platform) {
-    const runtimeImport = `@import "${platform.runtimeStyleImport}";`;
+function injectCssImports(content) {
     const INJECT_REG = /\/\*!\s*inject:runtime-style\s*\*\//;
     const END_INJECT_REG = /\/\*!\s*endinject\s*\*\//;
     let result = content;
@@ -214,35 +139,15 @@ function injectCssImports(content, platform) {
     while (startMatch && endMatch) {
         const startIndex = startMatch.index || 0;
         const endIndex = endMatch.index || 0;
-        result = result.slice(0, startIndex) + `${runtimeImport}\n` + result.slice(endIndex + endMatch[0].length);
+        result = result.slice(0, startIndex) + result.slice(endIndex + endMatch[0].length);
         startMatch = result.match(INJECT_REG);
         endMatch = result.match(END_INJECT_REG);
     }
     return result;
 }
-function transformStyleForPlatform(content, platform) {
-    const transformed = content.replace(/(@import\s+['"][^'"]+)\.wxss(['"]\s*;?)/g, `$1${platform.styleExt}$2`);
-    return injectCssImports(transformed, platform);
-}
-function getOutputPath(file, platform, ext) {
+function getOutputPath(file, ext) {
     const relativePath = path.relative(path.join(buildDir, 'src'), file);
-    return path.join(buildDir, config.outputDir, platform.outputDir, relativePath.replace(/\.(ts|less|json|wxml|wxss)$/, ext));
-}
-async function writeContentForPlatforms(file, getContent) {
-    await Promise.all(TARGET_PLATFORMS.map(async (platform) => {
-        const outputFile = getOutputPath(file, platform, getOutputExtension(file, platform));
-        ensureDirectoryExists(outputFile);
-        fs.writeFileSync(outputFile, getContent(platform), 'utf8');
-    }));
-}
-function getOutputExtension(file, platform) {
-    if (/\.wxml$/i.test(file)) {
-        return platform.markupExt;
-    }
-    if (/\.(less|wxss)$/i.test(file)) {
-        return platform.styleExt;
-    }
-    return path.extname(file);
+    return path.join(buildDir, config.outputDir, relativePath.replace(/\.(ts|less|json|wxml|wxss)$/, ext));
 }
 async function compileStyles() {
     const patterns = normalizePatterns(config.cssPlugin.entry);
@@ -257,28 +162,24 @@ async function compileStyles() {
         let transformed = processed.css;
         transformed = (0, convertCssVars_1.convertCssVars)(transformed);
         transformed = transformPxToRpx(transformed);
-        await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform));
+        transformed = injectCssImports(transformed);
+        const outputFile = getOutputPath(file, '.wxss');
+        ensureDirectoryExists(outputFile);
+        fs.writeFileSync(outputFile, transformed, 'utf8');
     }));
 }
 async function copyAssets() {
     const patterns = normalizePatterns(config.copyPlugin.entry);
     const files = await (0, fast_glob_1.default)(patterns, { cwd: buildDir, absolute: true });
     await Promise.all(files.map(async (file) => {
-        if (/\.json$/i.test(file)) {
-            const content = fs.readFileSync(file, 'utf8');
-            await writeContentForPlatforms(file, (platform) => transformUsingComponents(content, file, platform));
-            return;
-        }
-        if (/\.wxml$/i.test(file)) {
-            const content = fs.readFileSync(file, 'utf8');
-            await writeContentForPlatforms(file, (platform) => transformTemplateForPlatform(content, platform));
-            return;
-        }
+        const outputFile = getOutputPath(file, path.extname(file));
+        ensureDirectoryExists(outputFile);
         if (/\.wxss$/i.test(file)) {
             const content = fs.readFileSync(file, 'utf8');
-            const transformed = transformPxToRpx(content);
-            await writeContentForPlatforms(file, (platform) => transformStyleForPlatform(transformed, platform));
+            fs.writeFileSync(outputFile, injectCssImports(transformPxToRpx(content)), 'utf8');
+            return;
         }
+        fs.copyFileSync(file, outputFile);
     }));
 }
 const getCommonPlugins = () => {
@@ -342,16 +243,14 @@ async function compileScripts() {
             warn(warning);
         },
     });
-    for (const platform of TARGET_PLATFORMS) {
-        await bundle.write({
-            dir: path.join(buildDir, config.outputDir, platform.outputDir),
-            format: 'esm',
-            preserveModules: true,
-            preserveModulesRoot: path.join(buildDir, 'src'),
-            sourcemap: false,
-            banner: util_1.default.banner(),
-        });
-    }
+    await bundle.write({
+        dir: path.join(buildDir, config.outputDir),
+        format: 'esm',
+        preserveModules: true,
+        preserveModulesRoot: path.join(buildDir, 'src'),
+        sourcemap: false,
+        banner: util_1.default.banner(),
+    });
     await bundle.close();
 }
 function onBuildStart(opts) {
@@ -385,14 +284,14 @@ async function createWatcher(opts = {}) {
         input: inputFiles,
         external: [/@doraemon-ui/],
         plugins: [...getCommonPlugins()],
-        output: TARGET_PLATFORMS.map((platform) => ({
-            dir: path.join(buildDir, config.outputDir, platform.outputDir),
+        output: {
+            dir: path.join(buildDir, config.outputDir),
             format: 'esm',
             preserveModules: true,
             preserveModulesRoot: path.join(buildDir, 'src'),
             sourcemap: false,
             banner: util_1.default.banner(),
-        })),
+        },
         watch: {
             include: [path.join(buildDir, 'src', '**')],
         },

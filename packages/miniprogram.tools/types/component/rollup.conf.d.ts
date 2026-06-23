@@ -18,16 +18,6 @@ export interface DoraConfig {
     outputDir?: string;
     copyPlugin?: CopyPluginConfig;
     cssPlugin?: CssPluginConfig;
-    platforms?: Record<string, Partial<TargetPlatform>>;
-}
-interface TargetPlatform {
-    name: string;
-    outputDir: string;
-    markupExt: '.wxml' | '.ttml';
-    styleExt: '.wxss' | '.ttss';
-    runtimeStyleImport: string;
-    jsonUsingComponentsPrefix: string;
-    templateAttributePrefix: string;
 }
 interface ComponentConfig {
     _?: string | string[];

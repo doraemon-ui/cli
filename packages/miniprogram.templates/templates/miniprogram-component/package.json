@@ -6,15 +6,9 @@
   "author": "skyvow <724355924@qq.com>",
   "homepage": "",
   "license": "MIT",
-  "miniprogram": "miniprogram_dist/wx-npm",
-  "miniprogramType": "tt-npm",
-  "exports": {
-    "components": {
-      "index": "./miniprogram_dist/tt-npm/index"
-    }
-  },
-  "main": "miniprogram_dist/tt-npm/index.js",
-  "module": "miniprogram_dist/tt-npm/index.js",
+  "miniprogram": "miniprogram_dist",
+  "main": "miniprogram_dist/index.js",
+  "module": "miniprogram_dist/index.js",
   "devMain": "src/index.ts",
   "types": "index.d.ts",
   "keywords": [
