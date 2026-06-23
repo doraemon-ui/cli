@@ -131,6 +131,7 @@ function transformPxToRpx(content) {
     });
 }
 function injectCssImports(content) {
+    const runtimeImport = "@import '../../@doraemon-ui/style/index.wxss';";
     const INJECT_REG = /\/\*!\s*inject:runtime-style\s*\*\//;
     const END_INJECT_REG = /\/\*!\s*endinject\s*\*\//;
     let result = content;
@@ -139,7 +140,7 @@ function injectCssImports(content) {
     while (startMatch && endMatch) {
         const startIndex = startMatch.index || 0;
         const endIndex = endMatch.index || 0;
-        result = result.slice(0, startIndex) + result.slice(endIndex + endMatch[0].length);
+        result = result.slice(0, startIndex) + `${runtimeImport}\n` + result.slice(endIndex + endMatch[0].length);
         startMatch = result.match(INJECT_REG);
         endMatch = result.match(END_INJECT_REG);
     }
