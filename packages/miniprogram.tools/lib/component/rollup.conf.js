@@ -40,6 +40,7 @@ exports.buildComponent = rollupBuild;
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const fast_glob_1 = __importDefault(require("fast-glob"));
+const chalk_1 = __importDefault(require("chalk"));
 const chokidar_1 = __importDefault(require("chokidar"));
 const rollup_1 = require("rollup");
 const plugin_swc_1 = __importDefault(require("@rollup/plugin-swc"));
@@ -255,13 +256,13 @@ async function compileScripts() {
     await bundle.close();
 }
 function onBuildStart(opts) {
-    console.info(opts.onStartMsg || 'Building component');
+    console.log(chalk_1.default.gray(opts.onStartMsg || 'Building component'));
 }
 function onBuildEnd(opts) {
-    console.info(opts.onCloseMsg || 'Build complete');
+    console.log(chalk_1.default.cyan(opts.onCloseMsg || 'Build complete'));
 }
 function onBuildError(err) {
-    console.error(err);
+    console.error(chalk_1.default.red(err));
 }
 function debounce(fn, delay = 100) {
     let timer = null;
@@ -349,7 +350,7 @@ function rollupBuild(opts = {}) {
     const tasks = Array.isArray(opts._) ? opts._ : typeof opts._ === 'string' ? [opts._] : [];
     const watchMode = tasks.includes('watch');
     if (watchMode) {
-        console.info(opts.onStartMsg || 'Starting Rollup watch mode');
+        console.log(chalk_1.default.gray(opts.onStartMsg || 'Starting Rollup watch mode'));
         compileStyles().catch(onBuildError);
         copyAssets().catch(onBuildError);
         return createWatcher(opts);

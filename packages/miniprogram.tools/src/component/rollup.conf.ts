@@ -1,6 +1,7 @@
 import * as path from 'path'
 import * as fs from 'fs'
 import fg from 'fast-glob'
+import chalk from 'chalk'
 import chokidar from 'chokidar'
 import { rollup, watch as rollupWatch } from 'rollup'
 import type { Plugin as RollupPlugin, RollupBuild, RollupOptions, RollupWatcher } from 'rollup'
@@ -284,15 +285,15 @@ interface ComponentConfig {
 }
 
 function onBuildStart(opts: ComponentConfig): void {
-  console.info(opts.onStartMsg || 'Building component')
+  console.log(chalk.gray(opts.onStartMsg || 'Building component'))
 }
 
 function onBuildEnd(opts: ComponentConfig): void {
-  console.info(opts.onCloseMsg || 'Build complete')
+  console.log(chalk.cyan(opts.onCloseMsg || 'Build complete'))
 }
 
 function onBuildError(err: Error): void {
-  console.error(err)
+  console.error(chalk.red(err))
 }
 
 function debounce(fn: () => void, delay = 100): () => void {
@@ -389,7 +390,7 @@ function rollupBuild(opts: ComponentConfig = {}): Promise<RollupBuild | RollupWa
   const watchMode = tasks.includes('watch')
 
   if (watchMode) {
-    console.info(opts.onStartMsg || 'Starting Rollup watch mode')
+    console.log(chalk.gray(opts.onStartMsg || 'Starting Rollup watch mode'))
     compileStyles().catch(onBuildError)
     copyAssets().catch(onBuildError)
     return createWatcher(opts)

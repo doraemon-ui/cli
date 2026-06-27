@@ -20,6 +20,10 @@ export interface DtsConfig {
      * Directory for emitted temporary declaration files (default: resolved from <tsconfig.outDir>)
      */
     tempDir?: string;
+    /**
+     * Remove the temporary declaration directory before and after bundling.
+     */
+    cleanTempDir?: boolean;
 }
 declare function getDtsConfig(options?: Partial<Omit<DtsConfig, 'tempDir'>>): Required<DtsConfig>;
 export { getDtsConfig };

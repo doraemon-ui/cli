@@ -33,6 +33,10 @@ export interface DtsConfig {
    * Directory for emitted temporary declaration files (default: resolved from <tsconfig.outDir>)
    */
   tempDir?: string
+  /**
+   * Remove the temporary declaration directory before and after bundling.
+   */
+  cleanTempDir?: boolean
 }
 
 /**
@@ -71,6 +75,7 @@ function getDtsConfig(options: Partial<Omit<DtsConfig, 'tempDir'>> = {}): Requir
   const tempDir = getTempDir(tsconfigPath, compilerOptions)
 
   return {
+    cleanTempDir: options.cleanTempDir ?? true,
     entry: options.entry ?? path.join(tempDir, 'index.d.ts'),
     compilerOptions,
     outputFile: options.outputFile ?? defaultOutputFile,

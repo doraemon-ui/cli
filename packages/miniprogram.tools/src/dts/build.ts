@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import chalk from 'chalk'
 import ts from 'typescript'
@@ -190,6 +190,192 @@ function collectDeclarationFiles(dirPath: string): string[] {
 }
 
 /**
+ * Collect leading triple-slash reference directives from a declaration file.
+ *
+ * We preserve the original text so bundled output keeps exact `types`, `path`,
+ * `lib`, and `preserve` attributes emitted by TypeScript.
+ *
+ * @param {string} sourceText
+ * @returns {string[]}
+ */
+function collectReferenceDirectives(sourceText: string): string[] {
+  const references: string[] = []
+  const lines = sourceText.split(/\r?\n/)
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+
+    if (!trimmed) {
+      continue
+    }
+
+    if (trimmed.startsWith('/// <reference ') && trimmed.endsWith('/>')) {
+      references.push(trimmed)
+      continue
+    }
+
+    if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('*/')) {
+      continue
+    }
+
+    break
+  }
+
+  return references
+}
+
+interface ImportSpecifierRecord {
+  imported: string
+  local: string
+  isTypeOnly: boolean
+}
+
+interface ImportBucket {
+  namedSpecifiers: ImportSpecifierRecord[]
+  rawImports: string[]
+  sideEffectOnly: boolean
+}
+
+/**
+ * Determine whether an import clause is `import type`.
+ *
+ * TypeScript 6 deprecates `ImportClause.isTypeOnly` in favor of
+ * `phaseModifier === SyntaxKind.TypeKeyword`.
+ *
+ * @param {ts.ImportClause} importClause
+ * @returns {boolean}
+ */
+function isTypeOnlyImportClause(importClause: ts.ImportClause): boolean {
+  return importClause.phaseModifier === ts.SyntaxKind.TypeKeyword
+}
+
+/**
+ * Collect a normalized external import into its module bucket.
+ *
+ * Named imports from the same module are merged. Other syntaxes are preserved
+ * as raw imports to avoid changing semantics for namespace/default imports.
+ *
+ * @param {Map<string, ImportBucket>} importBuckets
+ * @param {ts.ImportDeclaration} statement
+ * @param {ts.SourceFile} sourceFile
+ */
+function collectImportDeclaration(
+  importBuckets: Map<string, ImportBucket>,
+  statement: ts.ImportDeclaration,
+  sourceFile: ts.SourceFile,
+): void {
+  if (!ts.isStringLiteral(statement.moduleSpecifier)) {
+    return
+  }
+
+  const moduleName = statement.moduleSpecifier.text
+  const bucket = importBuckets.get(moduleName) ?? {
+    namedSpecifiers: [],
+    rawImports: [],
+    sideEffectOnly: false,
+  }
+  importBuckets.set(moduleName, bucket)
+
+  const { importClause } = statement
+  if (!importClause) {
+    bucket.sideEffectOnly = true
+    return
+  }
+
+  if (importClause.name || !importClause.namedBindings || ts.isNamespaceImport(importClause.namedBindings)) {
+    const rawImport = statement.getFullText(sourceFile).trim()
+    if (rawImport && !bucket.rawImports.includes(rawImport)) {
+      bucket.rawImports.push(rawImport)
+    }
+    return
+  }
+
+  for (const element of importClause.namedBindings.elements) {
+    const imported = element.propertyName?.text ?? element.name.text
+    const local = element.name.text
+    const isTypeOnly = isTypeOnlyImportClause(importClause) || element.isTypeOnly
+    const exists = bucket.namedSpecifiers.some(
+      (specifier) =>
+        specifier.imported === imported && specifier.local === local && specifier.isTypeOnly === isTypeOnly,
+    )
+
+    if (!exists) {
+      bucket.namedSpecifiers.push({
+        imported,
+        local,
+        isTypeOnly,
+      })
+    }
+  }
+}
+
+/**
+ * Render normalized import buckets back into declaration source text.
+ *
+ * @param {Map<string, ImportBucket>} importBuckets
+ * @returns {string[]}
+ */
+function renderImportBuckets(importBuckets: Map<string, ImportBucket>): string[] {
+  const chunks: string[] = []
+
+  for (const [moduleName, bucket] of importBuckets) {
+    if (bucket.sideEffectOnly) {
+      chunks.push(`import '${moduleName}';`)
+    }
+
+    if (bucket.namedSpecifiers.length > 0) {
+      const specifiers = bucket.namedSpecifiers
+        .slice()
+        .sort((left, right) => {
+          if (left.imported !== right.imported) {
+            return left.imported.localeCompare(right.imported)
+          }
+          if (left.local !== right.local) {
+            return left.local.localeCompare(right.local)
+          }
+          return Number(left.isTypeOnly) - Number(right.isTypeOnly)
+        })
+      const valueSpecifiers = specifiers
+        .filter((specifier) => !specifier.isTypeOnly)
+        .map(({ imported, local }) => (imported === local ? imported : `${imported} as ${local}`))
+      const typeSpecifiers = specifiers
+        .filter((specifier) => specifier.isTypeOnly)
+        .map(({ imported, local }) => (imported === local ? imported : `${imported} as ${local}`))
+
+      if (valueSpecifiers.length > 0) {
+        chunks.push(`import { ${valueSpecifiers.join(', ')} } from '${moduleName}';`)
+      }
+
+      if (typeSpecifiers.length > 0) {
+        chunks.push(`import type { ${typeSpecifiers.join(', ')} } from '${moduleName}';`)
+      }
+    }
+
+    chunks.push(...bucket.rawImports)
+  }
+
+  return chunks
+}
+
+/**
+ * Rewrite relative inline import types after local modules have been inlined.
+ *
+ * Example:
+ * `typeof import("./core").FastColor` -> `typeof FastColor`
+ * `import("./core").SemanticSchema` -> `SemanticSchema`
+ *
+ * External package imports are preserved.
+ *
+ * @param {string} sourceText
+ * @returns {string}
+ */
+function rewriteRelativeImportTypes(sourceText: string): string {
+  return sourceText
+    .replace(/\btypeof\s+import\("(\.\/[^"]+)"\)\.([A-Za-z_$][\w$]*)/g, 'typeof $2')
+    .replace(/\bimport\("(\.\/[^"]+)"\)\.([A-Za-z_$][\w$]*)/g, '$2')
+}
+
+/**
  * Build a bundled declaration file from emitted temporary .d.ts files.
  *
  * @param {DtsConfig} [options={}]
@@ -197,11 +383,15 @@ function collectDeclarationFiles(dirPath: string): string[] {
  */
 async function buildDts(options: DtsConfig = {}): Promise<void> {
   const config = getDtsConfig(options)
-  const { tempDir, entry, outputFile } = config
+  const { cleanTempDir, tempDir, entry, outputFile } = config
 
   console.log('Powered by tsc')
   try {
     console.log(chalk.gray(`building ${outputFile}...\n`))
+
+    if (cleanTempDir) {
+      await rm(tempDir, { recursive: true, force: true })
+    }
 
     runDeclarationEmit(config.tsconfig, config.compilerOptions)
 
@@ -210,21 +400,22 @@ async function buildDts(options: DtsConfig = {}): Promise<void> {
     }
 
     const visited = new Set<string>()
-    const appendedImportChunks = new Set<string>()
+    const appendedReferenceChunks = new Set<string>()
     const appendedBodyChunks = new Set<string>()
-    const importChunks: string[] = []
+    const referenceChunks: string[] = []
     const bodyChunks: string[] = []
+    const importBuckets = new Map<string, ImportBucket>()
 
     /**
-     * Append a deduplicated external import block.
+     * Append a deduplicated reference directive block.
      *
      * @param {string} text
      */
-    function appendImportChunk(text: string): void {
+    function appendReferenceChunk(text: string): void {
       const trimmed = text.trim()
-      if (trimmed && !appendedImportChunks.has(trimmed)) {
-        appendedImportChunks.add(trimmed)
-        importChunks.push(trimmed)
+      if (trimmed && !appendedReferenceChunks.has(trimmed)) {
+        appendedReferenceChunks.add(trimmed)
+        referenceChunks.push(trimmed)
       }
     }
 
@@ -256,6 +447,7 @@ async function buildDts(options: DtsConfig = {}): Promise<void> {
 
       const sourceText = readFileSync(normalizedPath, 'utf8')
       const sourceFile = ts.createSourceFile(normalizedPath, sourceText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
+      collectReferenceDirectives(sourceText).forEach(appendReferenceChunk)
 
       for (const statement of sourceFile.statements) {
         if (ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)) {
@@ -273,7 +465,7 @@ async function buildDts(options: DtsConfig = {}): Promise<void> {
 
         if (ts.isImportDeclaration(statement)) {
           if (!isRelativeModule(statement)) {
-            appendImportChunk(statement.getFullText(sourceFile))
+            collectImportDeclaration(importBuckets, statement, sourceFile)
           }
           continue
         }
@@ -323,13 +515,19 @@ async function buildDts(options: DtsConfig = {}): Promise<void> {
       processFile(declarationFile, false)
     }
 
-    const sections = [importChunks.join('\n\n'), bodyChunks.join('\n\n')].filter(Boolean)
+    const importChunks = renderImportBuckets(importBuckets)
+    const sections = [referenceChunks.join('\n'), importChunks.join('\n\n'), bodyChunks.join('\n\n')].filter(Boolean)
+    const bundledSourceText = rewriteRelativeImportTypes(`${sections.join('\n\n')}\n`)
     await mkdir(path.dirname(outputFile), { recursive: true })
-    await writeFile(outputFile, `${sections.join('\n\n')}\n`)
+    await writeFile(outputFile, bundledSourceText)
     console.log(chalk.cyan('Building complete\n'))
   } catch (err) {
     console.error(chalk.red(err))
     throw err
+  } finally {
+    if (cleanTempDir) {
+      await rm(tempDir, { recursive: true, force: true })
+    }
   }
 }
 

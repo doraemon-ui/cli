@@ -170,6 +170,151 @@ function collectDeclarationFiles(dirPath) {
     return declarationFiles.sort((a, b) => a.localeCompare(b));
 }
 /**
+ * Collect leading triple-slash reference directives from a declaration file.
+ *
+ * We preserve the original text so bundled output keeps exact `types`, `path`,
+ * `lib`, and `preserve` attributes emitted by TypeScript.
+ *
+ * @param {string} sourceText
+ * @returns {string[]}
+ */
+function collectReferenceDirectives(sourceText) {
+    const references = [];
+    const lines = sourceText.split(/\r?\n/);
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+            continue;
+        }
+        if (trimmed.startsWith('/// <reference ') && trimmed.endsWith('/>')) {
+            references.push(trimmed);
+            continue;
+        }
+        if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('*/')) {
+            continue;
+        }
+        break;
+    }
+    return references;
+}
+/**
+ * Determine whether an import clause is `import type`.
+ *
+ * TypeScript 6 deprecates `ImportClause.isTypeOnly` in favor of
+ * `phaseModifier === SyntaxKind.TypeKeyword`.
+ *
+ * @param {ts.ImportClause} importClause
+ * @returns {boolean}
+ */
+function isTypeOnlyImportClause(importClause) {
+    return importClause.phaseModifier === typescript_1.default.SyntaxKind.TypeKeyword;
+}
+/**
+ * Collect a normalized external import into its module bucket.
+ *
+ * Named imports from the same module are merged. Other syntaxes are preserved
+ * as raw imports to avoid changing semantics for namespace/default imports.
+ *
+ * @param {Map<string, ImportBucket>} importBuckets
+ * @param {ts.ImportDeclaration} statement
+ * @param {ts.SourceFile} sourceFile
+ */
+function collectImportDeclaration(importBuckets, statement, sourceFile) {
+    if (!typescript_1.default.isStringLiteral(statement.moduleSpecifier)) {
+        return;
+    }
+    const moduleName = statement.moduleSpecifier.text;
+    const bucket = importBuckets.get(moduleName) ?? {
+        namedSpecifiers: [],
+        rawImports: [],
+        sideEffectOnly: false,
+    };
+    importBuckets.set(moduleName, bucket);
+    const { importClause } = statement;
+    if (!importClause) {
+        bucket.sideEffectOnly = true;
+        return;
+    }
+    if (importClause.name || !importClause.namedBindings || typescript_1.default.isNamespaceImport(importClause.namedBindings)) {
+        const rawImport = statement.getFullText(sourceFile).trim();
+        if (rawImport && !bucket.rawImports.includes(rawImport)) {
+            bucket.rawImports.push(rawImport);
+        }
+        return;
+    }
+    for (const element of importClause.namedBindings.elements) {
+        const imported = element.propertyName?.text ?? element.name.text;
+        const local = element.name.text;
+        const isTypeOnly = isTypeOnlyImportClause(importClause) || element.isTypeOnly;
+        const exists = bucket.namedSpecifiers.some((specifier) => specifier.imported === imported && specifier.local === local && specifier.isTypeOnly === isTypeOnly);
+        if (!exists) {
+            bucket.namedSpecifiers.push({
+                imported,
+                local,
+                isTypeOnly,
+            });
+        }
+    }
+}
+/**
+ * Render normalized import buckets back into declaration source text.
+ *
+ * @param {Map<string, ImportBucket>} importBuckets
+ * @returns {string[]}
+ */
+function renderImportBuckets(importBuckets) {
+    const chunks = [];
+    for (const [moduleName, bucket] of importBuckets) {
+        if (bucket.sideEffectOnly) {
+            chunks.push(`import '${moduleName}';`);
+        }
+        if (bucket.namedSpecifiers.length > 0) {
+            const specifiers = bucket.namedSpecifiers
+                .slice()
+                .sort((left, right) => {
+                if (left.imported !== right.imported) {
+                    return left.imported.localeCompare(right.imported);
+                }
+                if (left.local !== right.local) {
+                    return left.local.localeCompare(right.local);
+                }
+                return Number(left.isTypeOnly) - Number(right.isTypeOnly);
+            });
+            const valueSpecifiers = specifiers
+                .filter((specifier) => !specifier.isTypeOnly)
+                .map(({ imported, local }) => (imported === local ? imported : `${imported} as ${local}`));
+            const typeSpecifiers = specifiers
+                .filter((specifier) => specifier.isTypeOnly)
+                .map(({ imported, local }) => (imported === local ? imported : `${imported} as ${local}`));
+            if (valueSpecifiers.length > 0) {
+                chunks.push(`import { ${valueSpecifiers.join(', ')} } from '${moduleName}';`);
+            }
+            if (typeSpecifiers.length > 0) {
+                chunks.push(`import type { ${typeSpecifiers.join(', ')} } from '${moduleName}';`);
+            }
+        }
+        chunks.push(...bucket.rawImports);
+    }
+    return chunks;
+}
+/**
+ * Rewrite relative inline import types after local modules have been inlined.
+ *
+ * Example:
+ * `typeof import("./core").FastColor` -> `typeof FastColor`
+ * `import("./core").SemanticSchema` -> `SemanticSchema`
+ *
+ * External package imports are preserved.
+ *
+ * @param {string} sourceText
+ * @returns {string}
+ */
+function rewriteRelativeImportTypes(sourceText) {
+    return sourceText
+        .replace(/\btypeof\s+import\("(\.\/[^"]+)"\)\.([A-Za-z_$][\w$]*)/g, 'typeof $2')
+        .replace(/\bimport\("(\.\/[^"]+)"\)\.([A-Za-z_$][\w$]*)/g, '$2');
+}
+/**
  * Build a bundled declaration file from emitted temporary .d.ts files.
  *
  * @param {DtsConfig} [options={}]
@@ -177,29 +322,33 @@ function collectDeclarationFiles(dirPath) {
  */
 async function buildDts(options = {}) {
     const config = (0, getDtsConfig_1.getDtsConfig)(options);
-    const { tempDir, entry, outputFile } = config;
+    const { cleanTempDir, tempDir, entry, outputFile } = config;
     console.log('Powered by tsc');
     try {
         console.log(chalk_1.default.gray(`building ${outputFile}...\n`));
+        if (cleanTempDir) {
+            await (0, promises_1.rm)(tempDir, { recursive: true, force: true });
+        }
         runDeclarationEmit(config.tsconfig, config.compilerOptions);
         if (!(0, node_fs_1.existsSync)(tempDir)) {
             throw new Error(`Missing declaration directory: ${tempDir}.`);
         }
         const visited = new Set();
-        const appendedImportChunks = new Set();
+        const appendedReferenceChunks = new Set();
         const appendedBodyChunks = new Set();
-        const importChunks = [];
+        const referenceChunks = [];
         const bodyChunks = [];
+        const importBuckets = new Map();
         /**
-         * Append a deduplicated external import block.
+         * Append a deduplicated reference directive block.
          *
          * @param {string} text
          */
-        function appendImportChunk(text) {
+        function appendReferenceChunk(text) {
             const trimmed = text.trim();
-            if (trimmed && !appendedImportChunks.has(trimmed)) {
-                appendedImportChunks.add(trimmed);
-                importChunks.push(trimmed);
+            if (trimmed && !appendedReferenceChunks.has(trimmed)) {
+                appendedReferenceChunks.add(trimmed);
+                referenceChunks.push(trimmed);
             }
         }
         /**
@@ -228,6 +377,7 @@ async function buildDts(options = {}) {
             visited.add(normalizedPath);
             const sourceText = (0, node_fs_1.readFileSync)(normalizedPath, 'utf8');
             const sourceFile = typescript_1.default.createSourceFile(normalizedPath, sourceText, typescript_1.default.ScriptTarget.Latest, true, typescript_1.default.ScriptKind.TS);
+            collectReferenceDirectives(sourceText).forEach(appendReferenceChunk);
             for (const statement of sourceFile.statements) {
                 if (typescript_1.default.isImportDeclaration(statement) || typescript_1.default.isExportDeclaration(statement)) {
                     const relativeSpecifier = getRelativeModuleSpecifier(statement);
@@ -242,7 +392,7 @@ async function buildDts(options = {}) {
                 }
                 if (typescript_1.default.isImportDeclaration(statement)) {
                     if (!isRelativeModule(statement)) {
-                        appendImportChunk(statement.getFullText(sourceFile));
+                        collectImportDeclaration(importBuckets, statement, sourceFile);
                     }
                     continue;
                 }
@@ -282,13 +432,20 @@ async function buildDts(options = {}) {
             }
             processFile(declarationFile, false);
         }
-        const sections = [importChunks.join('\n\n'), bodyChunks.join('\n\n')].filter(Boolean);
+        const importChunks = renderImportBuckets(importBuckets);
+        const sections = [referenceChunks.join('\n'), importChunks.join('\n\n'), bodyChunks.join('\n\n')].filter(Boolean);
+        const bundledSourceText = rewriteRelativeImportTypes(`${sections.join('\n\n')}\n`);
         await (0, promises_1.mkdir)(node_path_1.default.dirname(outputFile), { recursive: true });
-        await (0, promises_1.writeFile)(outputFile, `${sections.join('\n\n')}\n`);
+        await (0, promises_1.writeFile)(outputFile, bundledSourceText);
         console.log(chalk_1.default.cyan('Building complete\n'));
     }
     catch (err) {
         console.error(chalk_1.default.red(err));
         throw err;
+    }
+    finally {
+        if (cleanTempDir) {
+            await (0, promises_1.rm)(tempDir, { recursive: true, force: true });
+        }
     }
 }

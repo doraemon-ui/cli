@@ -42,6 +42,7 @@ function getDtsConfig(options = {}) {
     const compilerOptions = options.compilerOptions ?? {};
     const tempDir = getTempDir(tsconfigPath, compilerOptions);
     return {
+        cleanTempDir: options.cleanTempDir ?? true,
         entry: options.entry ?? node_path_1.default.join(tempDir, 'index.d.ts'),
         compilerOptions,
         outputFile: options.outputFile ?? defaultOutputFile,
