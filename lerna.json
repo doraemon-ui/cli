@@ -26,5 +26,5 @@
     "**/lib/**",
     "**/miniprogram_dist/**"
   ],
-  "version": "independent"
+  "version": "0.0.1"
 }
