@@ -46,6 +46,7 @@ const install_1 = require("../install");
 const copy_1 = require("../../utils/copy");
 const prompt_1 = require("../../utils/prompt");
 const rewrite_1 = require("../../utils/rewrite");
+const toolsVersion = require('@doraemon-ui/miniprogram.tools/package.json').version;
 /**
  * 下划线转大写驼峰
  *
@@ -215,7 +216,8 @@ async function createComponent(cwd, name, type, npmScope) {
         keywords: [...packageJSON.keywords, ...name.split('.')],
         devDependencies: {
             ...packageJSON.devDependencies,
-            '@doraemon-ui/miniprogram.cli': version_1.version,
+            '@doraemon-ui/miniprogram.cli': `^${version_1.version}`,
+            '@doraemon-ui/miniprogram.tools': `^${toolsVersion}`,
         },
     }));
     await rewriteTypeDeclare(distDir, packageName, componentNameShort);
@@ -314,6 +316,10 @@ async function createLib(cwd, name, type, npmScope) {
         description: `${name.split('.').join(' ')} lib for doraemon-ui`,
         author,
         keywords: [...packageJSON.keywords, ...name.split('.')],
+        devDependencies: {
+            ...packageJSON.devDependencies,
+            '@doraemon-ui/miniprogram.tools': `^${toolsVersion}`,
+        },
     }));
     await rewriteTypeDeclare(distDir, packageName, componentNameShort);
     await rewriteReadme(distDir, packageName, componentNameShort);

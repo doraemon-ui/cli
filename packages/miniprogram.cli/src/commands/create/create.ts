@@ -11,6 +11,8 @@ import { PackageJson } from 'types-package-json'
 
 type PkgFn<T = PackageJson> = (pkg: Partial<T>) => Partial<T | { keywords?: string[] }>
 
+const toolsVersion: string = require('@doraemon-ui/miniprogram.tools/package.json').version
+
 /**
  * 下划线转大写驼峰
  *
@@ -193,7 +195,8 @@ async function createComponent(cwd: string, name: string, type: ComponentType, n
     keywords: [...(packageJSON.keywords as unknown as string[]), ...name.split('.')],
     devDependencies: {
       ...packageJSON.devDependencies,
-      '@doraemon-ui/miniprogram.cli': cliVersion,
+      '@doraemon-ui/miniprogram.cli': `^${cliVersion}`,
+      '@doraemon-ui/miniprogram.tools': `^${toolsVersion}`,
     },
   }))
   await rewriteTypeDeclare(distDir, packageName, componentNameShort)
@@ -298,6 +301,10 @@ async function createLib(cwd: string, name: string, type: ComponentType, npmScop
     description: `${name.split('.').join(' ')} lib for doraemon-ui`,
     author,
     keywords: [...(packageJSON.keywords as unknown as string[]), ...name.split('.')],
+    devDependencies: {
+      ...packageJSON.devDependencies,
+      '@doraemon-ui/miniprogram.tools': `^${toolsVersion}`,
+    },
   }))
   await rewriteTypeDeclare(distDir, packageName, componentNameShort)
   await rewriteReadme(distDir, packageName, componentNameShort)

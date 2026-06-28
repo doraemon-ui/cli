@@ -15,7 +15,7 @@
   "files": [
     "index.js",
     "index.d.ts",
-    "templates/"
+    "templates"
   ],
   "publishConfig": {
     "access": "public"
