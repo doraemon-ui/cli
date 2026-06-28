@@ -1,7 +1,7 @@
 {
   "name": "@doraemon-ui/miniprogram.templates",
   "private": false,
-  "version": "0.0.2-alpha.4",
+  "version": "0.0.2-alpha.64",
   "description": "Templates for doraemon-ui miniprogram development",
   "author": "skyvow <724355924@qq.com>",
   "license": "MIT",
